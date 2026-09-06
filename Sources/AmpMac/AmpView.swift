@@ -199,7 +199,7 @@ struct ReductionMeter: View {
     let label: String, db: Float
     var body: some View {
         HStack(spacing: 8) {
-            Text(label).font(.caption).foregroundStyle(.secondary)
+            Text(label).font(.caption).foregroundStyle(.secondary).fixedSize()
             GeometryReader { g in
                 ZStack(alignment: .trailing) {
                     RoundedRectangle(cornerRadius: 3).fill(.secondary.opacity(0.15))
