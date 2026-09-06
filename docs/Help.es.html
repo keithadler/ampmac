@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Ayuda de Amp for Mac</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: light dark; --fg: #1d1d1f; --muted: #6e6e73; --bg: #fff; --card: #f5f5f7; --accent: #6b46c1; --line: #e5e5ea; }
+  @media (prefers-color-scheme: dark) { :root { --fg: #f5f5f7; --muted: #a1a1a6; --bg: #1c1c1e; --card: #2c2c2e; --accent: #b794f4; --line: #3a3a3c; } }
+  body { margin: 0; font: 15px/1.55 -apple-system, "SF Pro Text", Helvetica, Arial, sans-serif; color: var(--fg); background: var(--bg); }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 30px; margin: 0 0 4px; } h1 small { display: block; font-size: 15px; font-weight: 400; color: var(--muted); }
+  h2 { font-size: 20px; margin: 36px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 16px; margin: 20px 0 6px; } .muted { color: var(--muted); }
+  code, pre { font: 13px ui-monospace, "SF Mono", Menlo, monospace; } pre { background: var(--card); padding: 12px 14px; border-radius: 8px; overflow-x: auto; }
+  .card { background: var(--card); border-radius: 10px; padding: 14px 16px; margin: 12px 0; } .warn { border-left: 4px solid #d9a400; }
+  nav a { margin-right: 14px; color: var(--accent); text-decoration: none; } a { color: var(--accent); }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 16px; } td, th { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; } th { color: var(--muted); font-weight: 600; font-size: 13px; }
+</style>
+</head><body><main>
+<h1>Amp for Mac <small>Un amplificador de batería para la entrada de tu interfaz de audio, y un Oído para la tonalidad y los acordes. Escucha una entrada y suena por una salida. No graba nada y nada sale del Mac.</small></h1>
+<nav><a href="#start">Primer uso</a><a href="#amp">El amplificador</a><a href="#presets">Presets</a><a href="#level">Guía de nivel</a><a href="#ear">El Oído</a><a href="#capo">Cejilla</a><a href="#history">Historial</a><a href="#limits">Límites</a><a href="#cli">Terminal</a><a href="#privacy">Privacidad</a></nav>
+
+<h2 id="start">Primer uso</h2>
+<p>Conecta la interfaz. Amp for Mac la elige como entrada y salida, y en una Scarlett Solo escucha la entrada 2, la del jack de instrumento. Cambia cualquiera de los tres menús de arriba a la derecha si tu montaje es otro.</p>
+<p>Pulsa el botón grande de encendido (o ⌘L). macOS pide una vez el micrófono: así llama macOS a la entrada de una interfaz, y sin ese permiso el amplificador no oye la batería. Concédelo. Luego toca.</p>
+<div class="card warn">Apaga el monitor directo de la interfaz. Con él encendido oyes la batería seca y el amplificador a la vez, y suena como dos baterías.</div>
+
+<h2 id="amp">El amplificador</h2>
+<p>Siete tarjetas, en el orden en que pasa el sonido. Cada una tiene un interruptor; apagada, esa etapa no está en el camino.</p>
+<table>
+<tr><th>Tarjeta</th><th>Qué hace</th></tr>
+<tr><td>Gate</td><td>Silencia lo que queda bajo el umbral, abre con el golpe, sostiene un momento para no cortar la cola de la caja y cierra a la velocidad del release.</td></tr>
+<tr><td>Attack &amp; Sustain</td><td>Attack arriba hace el golpe más fuerte; abajo lo suaviza. Sustain arriba sube la cola y la sala detrás del golpe; abajo la acorta. Hasta 12 dB en cada sentido.</td></tr>
+<tr><td>Compressor</td><td>Aplasta lo que supera el umbral según la relación. Attack y release son la velocidad con que agarra y suelta. Makeup devuelve el nivel. Mix por debajo de 100 mezcla el sonido comprimido con el intacto: la compresión en paralelo.</td></tr>
+<tr><td>Tone</td><td>Graves a 90 Hz, un medio que puedes colocar, agudos a 6 kHz, y un filtro de retumbo a 30 Hz por debajo.</td></tr>
+<tr><td>Drive</td><td>Saturación suave. Drive 0 es un toque ligero; el interruptor es el verdadero bypass. Tone después, de oscuro a brillante.</td></tr>
+<tr><td>Room</td><td>Una sala estéreo. Size es cuánto dura, Mix cuánto se oye. "Cut the room with the gate" es el sonido de los ochenta: una sala enorme que se corta en seco.</td></tr>
+<tr><td>Levels</td><td>Ganancia de entrada, nivel automático, ganancia de salida y el limitador, que deja la salida medio dB por debajo del máximo.</td></tr>
+</table>
+
+<h2 id="presets">Presets</h2>
+<p>Diecisiete de fábrica. Siete salas: Clean Kit, Tight Pop, Rock Room, Garage, Arena, Dry Punch, Lo-fi. Y diez sonidos que la gente reconoce de oído: Levee Stairwell (la escalera enorme), In the Air (la sala con gate de los ochenta), Motown (seco y con medios), Abbey Road (compresión fuerte y cálida), Nevermind (rock grande), Boom Bap (el sonido del sampler), Blue Note (natural, para escobillas), Tight Metal (gate rápido, brillante, sin sala), Dead 70s (toallas sobre los parches) y Disco (brillante, apretado, sala con gate).</p>
+<p>Mueve un mando y el preset muestra "edited"; Revert lo devuelve. Save… guarda tus mandos con tu propio nombre, en la sección Mine. ⌘1 a ⌘9 saltan entre los nueve primeros.</p>
+
+<h2 id="level">Guía de nivel</h2>
+<p>Mientras el amplificador funciona, una línea bajo el estado lee la entrada en bruto y dice qué hacer con el mando de ganancia de la interfaz: si recorta, bájalo; si está bajo, súbelo; si está bien, déjalo. El nivel automático, activado por defecto en la tarjeta Levels, ajusta luego la ganancia de entrada del amplificador un cuarto de dB cada vez para que los golpes queden cerca de -10 dB. El recorte en la interfaz es cosa del mando; ningún ajuste de la app puede deshacerlo.</p>
+
+<h2 id="ear">El Oído</h2>
+<p>Cambia a Ear arriba en la ventana (o ⌘E). Pulsa la oreja y pon una canción en el Mac. El Oído nombra cada acorde según pasa, deduce la tonalidad tras unos compases y lista posiciones de cejilla. Cada cuarto de segundo mira los últimos seis décimas de segundo, reparte la energía entre las doce notas y elige el acorde que mejor encaja; un acorde debe ganar dos veces seguidas para contar.</p>
+<p>El menú de fuente ofrece el sonido del propio Mac (macOS 14.2 o posterior; macOS pide una vez la grabación de audio del sistema) y todas las entradas. Una guitarra en la interfaz funciona igual que una canción. El Oído deja fuera la salida del amplificador, así que ambos pueden funcionar a la vez.</p>
+
+<h2 id="capo">Cejilla</h2>
+<p>Con la tonalidad conocida, la tarjeta Capo lista dónde va la cejilla para tocar la canción con acordes abiertos, del más fácil al menos. Mi bemol mayor: cejilla en el 3, toca en Do. Fa menor: cejilla en el 1, toca en Mi menor. Elige una y cada acorde mostrado pasa a ser la forma que hace tu mano; "Show the real chords" devuelve los nombres reales.</p>
+
+<h2 id="history">Historial</h2>
+<p>Al parar el Oído, la escucha se guarda: hora, tonalidad y acordes en orden. Aparece en la barra lateral bajo "Heard before". Haz clic para verla de nuevo, cámbiale el título en el campo de arriba o bórrala con la papelera. La lista vive en <code>~/Library/Application Support/Amp for Mac/listens.json</code>, y solo ahí.</p>
+
+<h2 id="limits">Límites, con franqueza</h2>
+<ul>
+<li>Es un amplificador independiente, no un plugin. No se carga en Logic ni en Live.</li>
+<li>La latencia es la de la interfaz: dos búferes más lo que la interfaz declara. La línea de estado muestra la cifra.</li>
+<li>El Oído oye acordes como un afinador oye notas: bien en una mezcla clara, peor en un muro de distorsión, y no sabe cómo se llama la canción. Tríadas mayores y menores y séptimas; sin acordes con bajo cambiado ni suspendidos.</li>
+</ul>
+
+<h2 id="cli">Terminal</h2>
+<pre>ampmac status                          dispositivos, latencia, permisos
+ampmac devices                         todos los dispositivos de audio
+ampmac presets [&lt;nombre&gt;]              los presets, o los mandos de uno en JSON
+ampmac run --preset "Rock Room"        el amplificador desde la terminal
+ampmac render kit.wav out.wav --preset Garage
+ampmac tone kit.wav [--chords]         una batería sintetizada, o Do Sol Lam Fa
+ampmac chords cancion.wav [--capo 3]   el Oído sobre una grabación
+ampmac ear [--source mac|Scarlett]     el Oído en directo
+ampmac selftest</pre>
+
+<h2 id="privacy">Privacidad</h2>
+<p>El sonido pasa por la memoria y nunca se escribe en disco. El historial guarda nombres de acordes, no audio. La única conexión que abre la app es la comprobación diaria opcional de versión en GitHub, que no envía nada sobre ti.</p>
+
+<p class="muted">Amp for Mac es gratis y de código abierto, licencia MIT, firmado por su autor. Más del mismo autor en <a href="https://keithadler.github.io">keithadler.github.io</a>.</p>
+</main></body></html>

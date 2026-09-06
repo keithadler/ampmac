@@ -1,0 +1,13 @@
+Amp for Mac. Free, open source.
+
+A drum amp for the input of the interface you already own. Plug in, press the button, play: gate, punch, squash, tone, drive and a room, in real time, with seventeen sounds from Motown to Nevermind and your own saved next to them.
+
+It tells you which way to turn the gain knob and levels the rest itself. Turn direct monitor off or you hear the kit twice; the delay is your interface's, a few milliseconds. It is not a plugin and will not load in Logic.
+
+The Ear: play a song on the Mac and it names the chords, the key, and where the capo goes so the easy shapes play it. Every listen is kept.
+
+Nothing recorded, nothing leaves the Mac. Also a command line: ampmac render kit.wav out.wav --preset "Rock Room"
+
+Seventh in the family with Clip, Tidy, Stash, Permissions, Ask and Watch.
+
+https://github.com/keithadler/ampmac

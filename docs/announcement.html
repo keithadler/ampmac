@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amp for Mac</title>
+<style>
+  :root { color-scheme: light dark; --fg:#1d1d1f; --muted:#6e6e73; --bg:#fff; --card:#f5f5f7; --accent:#b04e12; }
+  @media (prefers-color-scheme: dark) { :root { --fg:#f5f5f7; --muted:#a1a1a6; --bg:#141416; --card:#232326; --accent:#f08a3c; } }
+  body { margin:0; font:17px/1.55 -apple-system,"SF Pro Text",Helvetica,Arial,sans-serif; color:var(--fg); background:var(--bg); }
+  main { max-width:900px; margin:0 auto; padding:56px 24px 96px; }
+  h1 { font-size:44px; line-height:1.1; margin:0 0 12px; letter-spacing:-0.02em; } .lead { font-size:21px; color:var(--muted); margin:0 0 28px; }
+  img { max-width:100%; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,.25); margin:18px 0 32px; }
+  .btn { display:inline-block; background:var(--accent); color:#fff; padding:14px 22px; border-radius:10px; text-decoration:none; font-weight:600; }
+  h2 { font-size:26px; margin:40px 0 8px; } .grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; } .card { background:var(--card); border-radius:12px; padding:18px 20px; } .card h3 { margin:0 0 6px; font-size:18px; }
+  code { font:15px ui-monospace,"SF Mono",Menlo,monospace; background:var(--card); padding:2px 6px; border-radius:6px; } .small { color:var(--muted); font-size:15px; }
+</style></head><body><main>
+<h1>Your kit through a drum amp.<br>On this Mac.</h1>
+<p class="lead">Plug the interface in, press the button, play. Gate, punch, squash, tone, drive and a room, in real time, with seventeen drum sounds from Motown to Nevermind. And an Ear that hears the key and the chords of whatever the Mac is playing and says where the capo goes.</p>
+<p><a class="btn" href="https://github.com/keithadler/ampmac/releases/latest">Download for macOS</a> &nbsp; <span class="small">Free. Open source. macOS 14 or later. Nothing recorded, nothing leaves the Mac.</span></p>
+<img src="screenshots/amp.png" alt="The amp: Rock Room on a Scarlett Solo, every knob in view">
+<h2>What it does</h2>
+<div class="grid">
+<div class="card"><h3>A real drum chain</h3>In order: a gate with hold, an attack and sustain shaper, a compressor with a mix knob for the parallel trick, three-band tone, drive, a stereo room that can cut with the gate, and a limiter. Every knob glides, so presets switch while you play.</div>
+<div class="card"><h3>Sounds you know by ear</h3>Levee Stairwell, In the Air, Motown, Abbey Road, Nevermind, Boom Bap, Blue Note, Tight Metal, Dead 70s, Disco, and seven plain rooms. Save your own next to them.</div>
+<div class="card"><h3>It tells you where the knob goes</h3>A level guide reads the raw input and says whether to turn the interface's gain up or down. Auto level trims the rest so hits land near -10 dB.</div>
+<div class="card"><h3>The Ear</h3>Play a song on the Mac. It names the chords as they go by, works out the key, and lists capo positions so the open shapes play it. Every listen is kept, with its chords, to come back to.</div>
+</div>
+<img src="screenshots/ear.png" alt="The Ear: Eb major, capo 3 play in C, the chords in order">
+<h2>Honest limits</h2>
+<p class="small">It is a standalone amp, not a plugin, so it will not load in Logic. The delay is your interface's, a few milliseconds. Turn direct monitor off or you hear the kit twice. The Ear hears chords the way a tuner hears pitch: well on a clear mix, less well on a wall of distortion, and it does not know the song's name. macOS asks once for the microphone (that is how it describes an interface input) and once for system audio if you use the Ear on the Mac's own sound; the app records nothing with either.</p>
+<p class="small">Also a command line: <code>ampmac render kit.wav out.wav --preset "Rock Room"</code> and <code>ampmac chords song.wav</code>. MIT licensed. One of the free Mac apps at <a href="https://keithadler.github.io">keithadler.github.io</a>.</p>
+</main></body></html>

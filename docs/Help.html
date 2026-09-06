@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Amp for Mac Help</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: light dark; --fg: #1d1d1f; --muted: #6e6e73; --bg: #fff; --card: #f5f5f7; --accent: #6b46c1; --line: #e5e5ea; }
+  @media (prefers-color-scheme: dark) { :root { --fg: #f5f5f7; --muted: #a1a1a6; --bg: #1c1c1e; --card: #2c2c2e; --accent: #b794f4; --line: #3a3a3c; } }
+  body { margin: 0; font: 15px/1.55 -apple-system, "SF Pro Text", Helvetica, Arial, sans-serif; color: var(--fg); background: var(--bg); }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 30px; margin: 0 0 4px; } h1 small { display: block; font-size: 15px; font-weight: 400; color: var(--muted); }
+  h2 { font-size: 20px; margin: 36px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 16px; margin: 20px 0 6px; } .muted { color: var(--muted); }
+  code, pre { font: 13px ui-monospace, "SF Mono", Menlo, monospace; } pre { background: var(--card); padding: 12px 14px; border-radius: 8px; overflow-x: auto; }
+  .card { background: var(--card); border-radius: 10px; padding: 14px 16px; margin: 12px 0; } .warn { border-left: 4px solid #d9a400; }
+  nav a { margin-right: 14px; color: var(--accent); text-decoration: none; } a { color: var(--accent); }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 16px; } td, th { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; } th { color: var(--muted); font-weight: 600; font-size: 13px; }
+</style>
+</head><body><main>
+<h1>Amp for Mac <small>A drum amp for the input of your audio interface, and an Ear for the key and the chords. It listens to one input and plays to one output. Nothing is recorded, nothing leaves the Mac.</small></h1>
+<nav><a href="#start">First run</a><a href="#amp">The amp</a><a href="#presets">Presets</a><a href="#level">Level guide</a><a href="#ear">The Ear</a><a href="#capo">Capo</a><a href="#history">History</a><a href="#limits">Honest limits</a><a href="#cli">Command line</a><a href="#privacy">Privacy</a></nav>
+
+<h2 id="start">First run</h2>
+<p>Plug the interface in. Amp for Mac picks it for both input and output, and on a Scarlett Solo listens to input 2, the instrument jack. Change any of the three menus at the top right if that is not your setup.</p>
+<p>Press the big power button (or ⌘L). macOS asks once for the microphone: that is how macOS describes an interface input, and without it the amp cannot hear the drums. Allow it. Then play.</p>
+<div class="card warn">Turn the interface's direct-monitor knob or switch off. With it on you hear the dry kit and the amp together and it sounds like two kits.</div>
+
+<h2 id="amp">The amp</h2>
+<p>Seven cards, in the order the sound passes through them. Each has a switch; off means that stage is not in the way at all.</p>
+<table>
+<tr><th>Card</th><th>What it does</th></tr>
+<tr><td>Gate</td><td>Mutes what is under the threshold, opens on a hit, holds for a moment so a snare's ring is not chopped, then closes at the release speed.</td></tr>
+<tr><td>Attack &amp; Sustain</td><td>Attack up makes the stick hit louder; down softens it. Sustain up brings the ring and the room up behind the hit; down shortens it. Up to 12 dB either way.</td></tr>
+<tr><td>Compressor</td><td>Squashes what goes over the threshold by the ratio. Attack and release are how fast it grabs and lets go. Makeup brings the level back. Mix under 100 blends the squashed sound with the untouched one: the parallel trick.</td></tr>
+<tr><td>Tone</td><td>Low shelf at 90 Hz, a mid you can place, high shelf at 6 kHz, and a rumble filter at 30 Hz underneath.</td></tr>
+<tr><td>Drive</td><td>Soft saturation. Drive 0 is a light touch; the switch is the true bypass. Tone after it, dark to bright.</td></tr>
+<tr><td>Room</td><td>A stereo room. Size is how long it rings, Mix how much. "Cut the room with the gate" is the eighties sound: a big room that stops dead.</td></tr>
+<tr><td>Levels</td><td>Input gain, auto level, output gain, and the limiter, which keeps the output half a dB under full scale.</td></tr>
+</table>
+<p>The meters show input, output, whether the gate is open, and how much the compressor and the limiter are taking off.</p>
+
+<h2 id="presets">Presets</h2>
+<p>Seventeen built in. Seven rooms: Clean Kit, Tight Pop, Rock Room, Garage, Arena, Dry Punch, Lo-fi. Ten sounds people know by ear:</p>
+<table>
+<tr><td>Levee Stairwell</td><td>A huge slow room, long sustain, the drums recorded at the bottom of a stairwell.</td></tr>
+<tr><td>In the Air</td><td>The gated room of the eighties: a big splash that cuts off.</td></tr>
+<tr><td>Motown</td><td>Dry, tight, mid-forward, driven.</td></tr>
+<tr><td>Abbey Road</td><td>Heavy compression with a fast grab, warm, a small room.</td></tr>
+<tr><td>Nevermind</td><td>Big rock drums: punchy attack, scooped mids, a real room.</td></tr>
+<tr><td>Boom Bap</td><td>Crushed, dark, short: the sampler sound.</td></tr>
+<tr><td>Blue Note</td><td>Natural and warm, barely touched, for brushes and jazz.</td></tr>
+<tr><td>Tight Metal</td><td>Fast gate, hard attack, scooped, bright, no room.</td></tr>
+<tr><td>Dead 70s</td><td>Towels on the heads: short sustain, dull top, close and dry.</td></tr>
+<tr><td>Disco</td><td>Bright, tight, compressed, a gated room behind.</td></tr>
+</table>
+<p>Move any knob and the preset shows "edited"; Revert puts it back. Save… keeps your knobs under a name of your own, in the Mine section. ⌘1 to ⌘9 jump between the first nine presets, and the menu bar icon switches them while the window is hidden.</p>
+
+<h2 id="level">Level guide</h2>
+<p>While the amp runs, a line under the status reads the raw input and says what to do with the gain knob on the interface: clipping means turn it down, quiet means turn it up, good means leave it. Auto level, on by default in the Levels card, then trims the amp's own input gain a quarter dB at a time so hits land near -10 dB. Clipping at the interface is the knob's job; no setting in the app can undo it.</p>
+
+<h2 id="ear">The Ear</h2>
+<p>Switch to Ear at the top of the window (or ⌘E). Press the ear and play a song on the Mac. The Ear names each chord as it goes by, works out the key after a few bars, and lists capo positions. Every quarter second it looks at the last six tenths of a second of sound, sorts the energy into the twelve notes, and picks the chord that fits best; a chord has to win twice in a row to count.</p>
+<p>The source menu offers the Mac's own sound (macOS 14.2 or later; macOS asks once for system audio recording) and every input device. A guitar into the interface works as well as a song. The Ear leaves the amp's own output out of what it hears, so the two can run together.</p>
+
+<h2 id="capo">Capo</h2>
+<p>Once the key is known, the Capo card lists where a capo goes so open shapes play the song, easiest first. Eb major: capo 3, play in C. F minor: capo 1, play in Em. Choose one and every chord shown becomes the shape your hand makes; "Show the real chords" puts the sounding names back.</p>
+
+<h2 id="history">History</h2>
+<p>When you stop the Ear, the listen is kept: its time, key, and the chords in order. It appears in the sidebar under "Heard before". Click one to see it again, retitle it in the field at the top, or delete it with the trash button. The list lives in <code>~/Library/Application Support/Amp for Mac/listens.json</code>, and only there.</p>
+
+<h2 id="limits">Honest limits</h2>
+<ul>
+<li>It is a standalone amp, not a plugin. It will not load in Logic or Live.</li>
+<li>Latency is the interface's: two buffers plus what the interface reports. The status line shows the number. The Mac's own input and speakers are slower and feed back.</li>
+<li>The Ear hears chords the way a tuner hears pitch: well on a clear mix, less well on a wall of distortion, and it does not know a song's name. Major and minor triads and sevenths; no slash chords, no sus.</li>
+<li>Input and output on different devices are joined by a private aggregate device for the run. That works; one interface for both is simpler.</li>
+</ul>
+
+<h2 id="cli">Command line</h2>
+<pre>ampmac status                          devices chosen, latency, permissions
+ampmac devices                         every audio device
+ampmac presets [&lt;name&gt;]                the presets, or one preset's knobs as JSON
+ampmac run --preset "Rock Room"        the amp from the terminal, meters and level advice once a second
+ampmac render kit.wav out.wav --preset Garage
+ampmac tone kit.wav [--chords]         a synthesised kit, or C G Am F, to try things with
+ampmac chords song.wav [--capo 3]      the Ear on a recording
+ampmac ear [--source mac|Scarlett]     the Ear live
+ampmac selftest</pre>
+<p><code>--json</code> everywhere. Exit codes: 0 fine, 1 something to look at, 2 problem, 64 usage.</p>
+
+<h2 id="privacy">Privacy</h2>
+<p>Sound passes through in memory and is never written to disk. The history keeps chord names, not audio. The only connection the app opens is the optional daily update check, which asks GitHub for the latest version number and sends nothing about you. See PRIVACY.md in the repository.</p>
+
+<p class="muted">Amp for Mac is free and open source, MIT licensed, signed by its author. More from the same maker at <a href="https://keithadler.github.io">keithadler.github.io</a>. Problems: <a href="https://github.com/keithadler/ampmac/issues">github.com/keithadler/ampmac/issues</a>.</p>
+</main></body></html>
