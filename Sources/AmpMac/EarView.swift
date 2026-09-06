@@ -1,6 +1,7 @@
 //  Amp for Mac — MIT licensed. See LICENSE.
 //
-//  The Ear: what is playing, in what key, with which capo, and everything it heard before.
+//  The Ear: what is playing, in what key and tempo, with which capo, bar by bar, and everything
+//  it heard before. chordmap does the hearing.
 
 import SwiftUI
 import AppKit
@@ -11,66 +12,89 @@ final class EarModel: ObservableObject {
     let capture = Capture()
     @Published var listening = false
     @Published var source: Capture.Source = Capture.macSoundAvailable ? .mac : .device("") { didSet { if let d = try? Presets.encoder.encode(source) { Prefs.defaults.set(d, forKey: "earSource") }; if listening { stop(); start() } } }
-    @Published var chord: Chord?
-    @Published var key: Key?
+    /// The last few seconds, re-heard every couple of seconds while listening.
+    @Published var window: Analysis?
+    /// The whole listen, once stopped.
+    @Published var whole: Analysis?
+    @Published var chord: String?
+    /// The user's capo choice; nil means chordmap's own pick.
     @Published var capo: Int? { didSet { Prefs.defaults.set(capo ?? -1, forKey: "capo") } }
-    @Published var events: [ChordEvent] = []
     @Published var elapsed: Double = 0
     @Published var problem: String?
+    @Published var busy = false
     @Published var listens: [Listen] = History.load()
     @Published var viewing: Listen?
     /// Screenshots: fixed state, no capture.
     var demo = false
-    private var session = EarSession()
+    private var started = Date()
     private var timer: DispatchSourceTimer?
-    private var busy = false
+    private let working = FlagBox()
+    static let windowSeconds = 24.0, everySeconds = 2.0
 
     init() {
         if let d = Prefs.defaults.data(forKey: "earSource"), let s = try? JSONDecoder().decode(Capture.Source.self, from: d) { source = s }
-        let c = Prefs.defaults.integer(forKey: "capo"); capo = c >= 0 && Prefs.defaults.object(forKey: "capo") != nil ? c : nil
+        let c = Prefs.defaults.integer(forKey: "capo"); capo = Prefs.defaults.object(forKey: "capo") != nil && c >= 0 ? c : nil
     }
 
-    var capoOptions: [CapoOption] { key.map { Capo.options(for: $0) } ?? [] }
-    var flats: Bool { key?.flats ?? false }
-    func shown(_ c: Chord) -> String { capo.map { c.shape(capo: $0).name(flats: flats) } ?? c.name(flats: flats) }
+    var analysis: Analysis? { viewing?.analysis ?? whole ?? window }
+    var flats: Bool { analysis.map { Pitch.usesFlats($0.key) } ?? false }
+    var effectiveCapo: Int { capo ?? analysis?.guitar.capo ?? 0 }
+    /// A sounding chord as the shape the hand makes with the chosen capo.
+    func shown(_ label: String) -> String {
+        guard label != "N" else { return "–" }
+        let fret = effectiveCapo
+        if let a = analysis, fret == a.guitar.capo, let s = a.guitar.shapes[label] { return s }
+        return Pitch.shape(label, capo: fret, flats: flats)
+    }
     var statusLine: String {
         if let problem { return problem }
-        if listening { return "Listening to \(source.label). \(Int(elapsed)) s." }
+        if listening { return String(format: "Listening to %@. %d s.%@", source.label, Int(elapsed), elapsed < 4 ? " The first chart comes after four seconds." : "") }
+        if busy { return "Hearing the whole listen…" }
         return "Off. Press the button and play something on the Mac, or through the input."
     }
 
     func toggle() { listening ? stop() : start() }
     func start() {
-        problem = nil; viewing = nil
-        session = EarSession(); events = []; chord = nil; key = nil; elapsed = 0
+        problem = nil; viewing = nil; whole = nil; window = nil; chord = nil; elapsed = 0
         do { try capture.start(source) } catch { problem = error.localizedDescription; return }
-        listening = true
+        started = Date(); listening = true
         let t = DispatchSource.makeTimerSource(queue: DispatchQueue.global(qos: .userInitiated))
-        t.schedule(deadline: .now() + 0.6, repeating: 0.25)
-        t.setEventHandler { [weak self] in self?.analyse() }
+        t.schedule(deadline: .now() + 4.2, repeating: EarModel.everySeconds)
+        t.setEventHandler { [weak self] in self?.hear() }
         t.resume(); timer = t
     }
-    nonisolated private func analyse() {
-        let (samples, rate, started) = MainActor.assumeIsolatedIfPossible { (self.capture.latest(seconds: 0.6), self.capture.sampleRate, self.session.started) }
-        guard samples.count > 1024 else { return }
-        let chroma = Chroma.of(samples, sampleRate: Float(rate))
-        let at = Date().timeIntervalSince(started)
+    nonisolated private func hear() {
+        let (samples, rate, seconds) = MainActor.assumeIsolatedIfPossible { (self.capture.latest(seconds: EarModel.windowSeconds), self.capture.sampleRate, self.capture.seconds) }
+        guard samples.count >= Int(4 * rate), !working.value else { return }
+        working.value = true; defer { working.value = false }
+        let result = try? Chordmap.analyze(samples, sampleRate: rate)
         Task { @MainActor in
             guard self.listening else { return }
-            self.session.add(chroma, at: at)
-            self.elapsed = at
-            if self.chord != self.session.current { self.chord = self.session.current }
-            if self.key != self.session.key { self.key = self.session.key; if let k = self.key, self.capo == nil, let best = Capo.options(for: k).first, best.fret != 0 { /* suggest, do not set */ _ = best } }
-            if self.events.count != self.session.events.count { self.events = self.session.events }
+            self.elapsed = seconds
+            if let a = result {
+                self.window = a
+                let now = a.chord(at: a.duration - 0.5)?.label
+                if now != self.chord { self.chord = now }
+            }
         }
     }
     func stop() {
         timer?.cancel(); timer = nil
-        capture.stop(); listening = false
-        if !session.events.isEmpty {
-            let f = DateFormatter(); f.dateStyle = .none; f.timeStyle = .short
-            let l = Listen(started: session.started, title: "Listen at \(f.string(from: session.started))", seconds: elapsed, key: session.key, events: session.events)
-            History.add(l); listens = History.load(); viewing = l
+        capture.stop(); listening = false; chord = nil
+        let all = capture.all(), rate = capture.sampleRate, began = started, secs = capture.seconds
+        guard all.count >= Int(4 * rate) else { return }
+        busy = true
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let a = try? Chordmap.analyze(all, sampleRate: rate)
+            Task { @MainActor in
+                guard let self else { return }
+                self.busy = false
+                guard let a else { self.problem = "chordmap could not hear a chart in that."; return }
+                self.whole = a
+                let f = DateFormatter(); f.dateStyle = .none; f.timeStyle = .short
+                let l = Listen(started: began, title: "Listen at \(f.string(from: began))", seconds: secs, analysis: a)
+                History.add(l); self.listens = History.load(); self.viewing = l
+            }
         }
     }
     func rename(_ l: Listen, to title: String) {
@@ -78,11 +102,10 @@ final class EarModel: ObservableObject {
         listens[i].title = title; History.save(listens); if viewing?.id == l.id { viewing = listens[i] }
     }
     func delete(_ l: Listen) { listens.removeAll { $0.id == l.id }; History.save(listens); if viewing?.id == l.id { viewing = nil } }
-    func show(_ l: Listen) { viewing = l; key = l.key; events = l.events; chord = nil }
+    func show(_ l: Listen) { viewing = l; chord = nil }
 }
 
 extension MainActor {
-    /// The capture buffer is locked on its own; this only reads two values the model owns.
     nonisolated static func assumeIsolatedIfPossible<T: Sendable>(_ body: @MainActor () -> T) -> T {
         if Thread.isMainThread { return MainActor.assumeIsolated(body) }
         return DispatchQueue.main.sync { MainActor.assumeIsolated(body) }
@@ -95,10 +118,12 @@ struct EarPanel: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 header
-                if let v = ear.viewing { ListenCard(listen: v) } else { liveCard }
+                if let v = ear.viewing { ListenCard(listen: v) }
+                nowCard
                 capoCard
-                timelineCard
-                Text("The Ear hears chords and keys the way a tuner hears pitch: well on a clear mix, less well on a wall of distortion. It records nothing.")
+                chartCard
+                if let a = ear.analysis, ear.viewing != nil || ear.whole != nil { SheetCard(text: Chordmap.chordSheet(a)) }
+                Text("The Ear is chordmap, an open-source engine for tempo, key, chords, sections and the capo (github.com/keithadler/chordmap). It hears a clear mix well and a wall of distortion less well, and it does not know a song's name. It records nothing.")
                     .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
         }.navigationTitle("Amp for Mac")
@@ -123,16 +148,23 @@ struct EarPanel: View {
             }.frame(width: 260).labelsHidden().controlSize(.small)
         }
     }
-    private var liveCard: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 24) {
+    private var nowCard: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 28) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Now").font(.caption).foregroundStyle(.secondary)
-                Text(ear.chord.map { ear.shown($0) } ?? "–").font(.system(size: 64, weight: .bold, design: .rounded)).monospacedDigit()
-                if let c = ear.chord, ear.capo != nil { Text("sounds as \(c.name(flats: ear.flats))").font(.callout).foregroundStyle(.secondary) }
+                Text(ear.viewing != nil ? "First" : "Now").font(.caption).foregroundStyle(.secondary)
+                let label = ear.chord ?? ear.analysis?.chordNames.first
+                Text(label.map { ear.shown($0) } ?? "–").font(.system(size: 64, weight: .bold, design: .rounded))
+                if let label, ear.effectiveCapo != 0 { Text("sounds as \(label)").font(.callout).foregroundStyle(.secondary) }
             }
             VStack(alignment: .leading, spacing: 4) {
                 Text("Key").font(.caption).foregroundStyle(.secondary)
-                Text(ear.key?.name ?? "–").font(.system(size: 34, weight: .semibold, design: .rounded))
+                Text(ear.analysis?.key.name ?? "–").font(.system(size: 34, weight: .semibold, design: .rounded))
+                if let k = ear.analysis?.key, k.confidence < 0.1 { Text("or \(k.alternative)").font(.callout).foregroundStyle(.secondary) }
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Tempo").font(.caption).foregroundStyle(.secondary)
+                Text(ear.analysis.map { String(format: "%.0f", $0.tempo.bpm) } ?? "–").font(.system(size: 34, weight: .semibold, design: .rounded))
+                if let a = ear.analysis { Text("\(a.meter)").font(.callout).foregroundStyle(.secondary) }
             }
             Spacer()
         }.padding(16).background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 10))
@@ -140,50 +172,66 @@ struct EarPanel: View {
     private var capoCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Capo").font(.headline)
-            if ear.capoOptions.isEmpty { Text("The key shows up after a few chords, and the capo choices with it.").font(.callout).foregroundStyle(.secondary) }
-            else {
+            if let a = ear.analysis {
                 Picker("Capo", selection: $ear.capo) {
-                    Text("Show the real chords").tag(Int?.none)
-                    ForEach(ear.capoOptions) { o in Text(o.line + (o.ease == 0 ? "  (easiest)" : "")).tag(Int?.some(o.fret)) }
+                    ForEach(a.capoOptionsByEase.prefix(4)) { o in
+                        Text((o.capo == 0 ? "No capo" : "Capo \(o.capo)") + (o.hardSeconds == 0 ? ", every shape open" : String(format: ", %.0f s of barre chords", o.hardSeconds)) + (o.capo == a.guitar.capo ? "  (chordmap's pick)" : ""))
+                            .tag(o.capo == a.guitar.capo ? Int?.none : Int?.some(o.capo))
+                    }
                 }.pickerStyle(.radioGroup).labelsHidden()
-                Text("With a capo chosen, every chord below is the shape your hand makes.").font(.caption).foregroundStyle(.secondary)
-            }
+                let shapes = a.chordNames.filter { $0 != "N" }.map { "\($0) → \(ear.shown($0))" }.filter { !$0.hasSuffix("→ " + $0.split(separator: " ")[0]) }
+                if ear.effectiveCapo != 0, !shapes.isEmpty { Text(Array(NSOrderedSet(array: shapes)).compactMap { $0 as? String }.prefix(8).joined(separator: "   ")).font(.callout.monospacedDigit()).foregroundStyle(.secondary) }
+                Text("With a capo, every chord below is the shape your hand makes.").font(.caption).foregroundStyle(.secondary)
+            } else { Text("The key, the tempo and the capo show up after a few bars.").font(.callout).foregroundStyle(.secondary) }
         }.padding(14).background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 10))
     }
-    private var timelineCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Chords, in order").font(.headline)
-            if ear.events.isEmpty { Text("Nothing yet.").font(.callout).foregroundStyle(.secondary) }
-            else {
-                ChordFlow(names: merged(ear.events))
-            }
+    private var chartCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(ear.viewing != nil || ear.whole != nil ? "The chart" : "The last \(Int(EarModel.windowSeconds)) seconds, bar by bar").font(.headline)
+            if let a = ear.analysis, !a.bars.isEmpty {
+                ForEach(a.sections.isEmpty ? [Analysis.Section(start: 0, end: a.duration, label: "", guess: "", bar: 0)] : a.sections) { s in
+                    let bars = a.bars.filter { $0.start >= s.start - 0.01 && $0.start < s.end - 0.01 }
+                    if !bars.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            if !s.guess.isEmpty { Text(s.guess.capitalized + (s.label.isEmpty ? "" : " (\(s.label))")).font(.caption.bold()).foregroundStyle(.secondary) }
+                            BarFlow(bars: bars.map { bar in Array(NSOrderedSet(array: bar.beats.map { ear.shown($0) })).compactMap { $0 as? String }.joined(separator: " · ") })
+                        }
+                    }
+                }
+                if a.harmonicity < 0.3 { Text("Sparse harmony in this stretch: trust the key and the tempo more than the chords.").font(.caption).foregroundStyle(.orange) }
+            } else { Text("Nothing yet.").font(.callout).foregroundStyle(.secondary) }
         }.padding(14).background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 10))
-    }
-    private func merged(_ events: [ChordEvent]) -> [(String, String)] {
-        var out: [(String, String)] = []
-        for e in events { let n = ear.shown(e.chord); if out.last?.0 != n { out.append((n, String(format: "%d:%02d", Int(e.at) / 60, Int(e.at) % 60))) } }
-        return out
     }
 }
 
-/// Chips that wrap.
-struct ChordFlow: View {
-    let names: [(String, String)]
+/// One chip per bar, wrapping.
+struct BarFlow: View {
+    let bars: [String]
     var body: some View {
         var width: CGFloat = 0, height: CGFloat = 0
         return GeometryReader { g in
             ZStack(alignment: .topLeading) {
-                ForEach(Array(names.enumerated()), id: \.offset) { i, n in
-                    VStack(spacing: 2) { Text(n.0).font(.title3.bold()); Text(n.1).font(.caption2).foregroundStyle(.secondary) }
+                ForEach(Array(bars.enumerated()), id: \.offset) { i, n in
+                    Text(n).font(.title3.bold()).lineLimit(1)
                         .padding(.horizontal, 10).padding(.vertical, 6).background(.background.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
                         .alignmentGuide(.leading) { d in
                             if abs(width - d.width) > g.size.width { width = 0; height -= d.height + 8 }
-                            let r = width; if i == names.count - 1 { width = 0 } else { width -= d.width + 8 }; return r
+                            let r = width; if i == bars.count - 1 { width = 0 } else { width -= d.width + 8 }; return r
                         }
-                        .alignmentGuide(.top) { _ in let r = height; if i == names.count - 1 { height = 0 }; return r }
+                        .alignmentGuide(.top) { _ in let r = height; if i == bars.count - 1 { height = 0 }; return r }
                 }
             }
-        }.frame(minHeight: CGFloat(max(1, (names.count + 7) / 8)) * 56)
+        }.frame(minHeight: CGFloat(max(1, (bars.count + 9) / 10)) * 44)
+    }
+}
+
+struct SheetCard: View {
+    let text: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack { Text("Chord sheet").font(.headline); Spacer(); Button("Copy") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(text, forType: .string) } }
+            Text(text).font(.system(.body, design: .monospaced)).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+        }.padding(14).background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 10))
     }
 }
 
@@ -197,10 +245,10 @@ struct ListenCard: View {
                 TextField("Title", text: $title).textFieldStyle(.roundedBorder).font(.title3).frame(maxWidth: 360)
                     .onAppear { title = listen.title }.onSubmit { ear.rename(listen, to: title) }
                 Spacer()
-                Button("Back to live") { ear.viewing = nil; ear.events = []; ear.key = nil }
+                Button("Back to live") { ear.viewing = nil; ear.whole = nil; ear.window = nil }
                 Button(role: .destructive) { ear.delete(listen) } label: { Image(systemName: "trash") }
             }
-            Text("\(listen.started.formatted(date: .abbreviated, time: .shortened)), \(Int(listen.seconds)) s, \(listen.key?.name ?? "key unknown")").font(.callout).foregroundStyle(.secondary)
+            Text("\(listen.started.formatted(date: .abbreviated, time: .shortened)), \(Int(listen.seconds)) s, \(listen.analysis.key.name), \(Int(listen.analysis.tempo.bpm.rounded())) bpm").font(.callout).foregroundStyle(.secondary)
         }.padding(14).background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 10))
     }
 }
@@ -214,7 +262,7 @@ struct HistorySidebar: View {
                 ForEach(ear.listens.reversed()) { l in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(l.title).lineLimit(1)
-                        Text((l.key?.name ?? "") + (l.chordNames.isEmpty ? "" : " · " + l.chordNames.prefix(4).joined(separator: " "))).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        Text("\(l.analysis.key.name) · \(Int(l.analysis.tempo.bpm.rounded())) bpm · " + l.chordNames.prefix(4).joined(separator: " ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }.tag(l.id)
                 }
             }

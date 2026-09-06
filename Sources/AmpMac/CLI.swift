@@ -18,8 +18,11 @@ enum CLI {
                                                       play the amp from the terminal, meters once a second
       ampmac render <in.wav> <out.wav> [--preset <name>] [--params <file.json>]
                                                       run a recording through the amp, offline
-      ampmac tone <out.wav> [--seconds N | --chords]  write a synthesised kit (or C G Am F) to try things with
-      ampmac chords <file> [--capo N] [--json]        the Ear on a recording: key, capo choices, chords in order
+      ampmac tone <out.wav> [--seconds N]             write a synthesised kit to try the amp with
+      ampmac tone <out.wav> --chords ["C G Am F"] [--bpm N] [--loops N]
+                                                      write a strummed progression from chordmap's synth
+      ampmac chords <file> [--capo N] [--json] [--bpm hint] [--genre band|hiphop|dance]
+                                                      the Ear on a recording: key, tempo, capo, the chord sheet
       ampmac ear [--source mac|<device>] [--seconds N] [--json]
                                                       the Ear live, on the Mac's own sound or an input
       ampmac screenshots <dir> [--announce]           render windows and promo cards from demo data
@@ -54,7 +57,7 @@ enum CLI {
 
     static func flag(_ n: String, _ a: [String]) -> Bool { a.contains(n) }
     static func value(_ n: String, _ a: [String]) -> String? { guard let i = a.firstIndex(of: n), i + 1 < a.count else { return nil }; return a[i + 1] }
-    static let valued = ["--filter", "--in", "--out", "--channel", "--preset", "--seconds", "--params", "--buffer", "--capo", "--source"]
+    static let valued = ["--filter", "--in", "--out", "--channel", "--preset", "--seconds", "--params", "--buffer", "--capo", "--source", "--bpm", "--genre", "--loops"]
     static func positional(_ a: [String]) -> [String] {
         var out: [String] = []; var skip = false
         for x in a { if skip { skip = false; continue }; if valued.contains(x) { skip = true; continue }; if x.hasPrefix("--") { continue }; out.append(x) }
@@ -98,13 +101,14 @@ enum CLI {
             let preset = Prefs.presetName ?? "Rock Room"
             if js {
                 out(json(["input": dict(i), "output": dict(o), "inputChannel": ch + 1, "channelLabel": i.channelLabel(ch), "bufferFrames": Prefs.bufferFrames, "roundTripMs": NSDecimalNumber(string: String(format: "%.1f", ms)),
-                          "microphone": AVAuthorizationStatusLike(mic).word, "preset": preset, "interfaceFound": i.isInterface, "version": version]))
+                          "microphone": AVAuthorizationStatusLike(mic).word, "preset": preset, "interfaceFound": i.isInterface, "version": version, "chordmap": Chordmap.version]))
             } else {
                 out("Input: \(i.name), \(i.channelLabel(ch))")
                 out("Output: \(o.name)")
                 out(String(format: "Round trip: about %.1f ms at %d frames, %.0f Hz", ms, Prefs.bufferFrames, i.sampleRate))
                 out("Microphone permission: \(AVAuthorizationStatusLike(mic).word)")
                 out("Preset: \(preset)")
+                out("Ear: chordmap \(Chordmap.version)")
                 if !i.isInterface { out("No audio interface found; using the Mac's own input and output.") }
             }
             return i.isInterface && mic != .denied ? 0 : 1
@@ -137,8 +141,16 @@ enum CLI {
         case "tone":
             guard let path = pos.first else { err("ampmac tone <out.wav> [--seconds N]"); return 64 }
             let secs = Float(value("--seconds", args) ?? "") ?? 8
-            let kit = flag("--chords", args) ? Synth.chords() : Synth.kit(seconds: secs, sampleRate: 48000)
-            do { try Wave.write(URL(fileURLWithPath: path), left: kit, right: kit, sampleRate: 48000); out("\(path): \(kit.count) samples, \(flag("--chords", args) ? "C G Am F" : "120 bpm")"); return 0 }
+            if flag("--chords", args) {
+                let prog = pos.count > 1 ? pos[1] : "C G Am F"
+                let bpm = Float(value("--bpm", args) ?? "") ?? 100, loops = Int(value("--loops", args) ?? "") ?? 2
+                let (x, sr) = Chordmap.synth(prog, bpm: bpm, loops: loops)
+                guard !x.isEmpty else { err("chordmap could not read the progression \"\(prog)\". Try: \"C G Am F\""); return 64 }
+                do { try Wave.write(URL(fileURLWithPath: path), left: x, right: x, sampleRate: sr); out(String(format: "%@: %@ at %.0f bpm, %d loops, %.1f s", path, prog, bpm, loops, Double(x.count) / sr)); return 0 }
+                catch { err("tone failed: \(error.localizedDescription)"); return 2 }
+            }
+            let kit = Synth.kit(seconds: secs, sampleRate: 48000)
+            do { try Wave.write(URL(fileURLWithPath: path), left: kit, right: kit, sampleRate: 48000); out("\(path): \(kit.count) samples, 120 bpm"); return 0 }
             catch { err("tone failed: \(error.localizedDescription)"); return 2 }
         case "run":
             guard let (i, o, ch) = choose(args) else { err("No audio device with an input and one with an output."); return 1 }
@@ -169,11 +181,11 @@ enum CLI {
             engine.stop()
             return engine.meters.dropouts > 0 ? 1 : 0
         case "chords":
-            guard let path = pos.first else { err("ampmac chords <file> [--capo N]"); return 64 }
+            guard let path = pos.first else { err("ampmac chords <file> [--capo N] [--json]"); return 64 }
             do {
                 let (samples, sr) = try Wave.read(URL(fileURLWithPath: path))
-                let s = EarSession.analyse(samples, sampleRate: Float(sr))
-                return report(session: s, capo: Int(value("--capo", args) ?? ""), json: js)
+                let a = try Chordmap.analyze(samples, sampleRate: sr, bpmHint: Float(value("--bpm", args) ?? ""), genre: value("--genre", args))
+                return report(a, capo: Int(value("--capo", args) ?? ""), json: js)
             } catch { err("chords failed: \(error.localizedDescription)"); return 2 }
         case "ear":
             let src: Capture.Source
@@ -184,26 +196,31 @@ enum CLI {
             let capture = Capture()
             do { try capture.start(src) } catch { err(error.localizedDescription); return 2 }
             let secs = Double(value("--seconds", args) ?? "") ?? 0
-            let session = EarSession()
+            let began = Date()
             out("Listening to \(src.label). Ctrl-C stops.")
             signal(SIGINT) { _ in exit(0) }
-            let until = secs > 0 ? Date().addingTimeInterval(secs) : Date.distantFuture
-            var last: Chord?
+            let until = secs > 0 ? began.addingTimeInterval(secs) : Date.distantFuture
+            var last: String?
+            var nextHear = began.addingTimeInterval(4.2)
             while Date() < until {
                 RunLoop.main.run(until: Date().addingTimeInterval(0.25))
-                let x = capture.latest(seconds: 0.6); guard x.count > 1024 else { continue }
-                let chroma = Chroma.of(x, sampleRate: Float(capture.sampleRate))
-                if flag("--debug", args) { out(String(format: "%5.1f s  rate %.0f  peak %.4f  energy %.4f  %@  %@", Date().timeIntervalSince(session.started), capture.sampleRate, Measure.peak(x), chroma.energy, chroma.normalized.map { String(format: "%.2f", $0) }.joined(separator: " "), Chord.match(chroma).map { "\($0.chord.name) \(String(format: "%.2f", $0.score))" } ?? "-")) }
-                session.add(chroma, at: Date().timeIntervalSince(session.started))
-                if session.current != last, let c = session.current, !js { out(String(format: "%6.1f s  %@", Date().timeIntervalSince(session.started), c.name(flats: session.key?.flats ?? false))); last = c }
-                else if session.current != last { last = session.current }
+                guard Date() >= nextHear else { continue }
+                nextHear = Date().addingTimeInterval(EarModel.everySeconds)
+                let x = capture.latest(seconds: EarModel.windowSeconds); guard x.count >= Int(4 * capture.sampleRate) else { continue }
+                guard let a = try? Chordmap.analyze(x, sampleRate: capture.sampleRate) else { continue }
+                let now = a.chord(at: a.duration - 0.5)?.label
+                if now != last, let now, !js { out(String(format: "%6.1f s  %@   (%@, %.0f bpm)", capture.seconds, now, a.key.name, a.tempo.bpm)) }
+                last = now
             }
             capture.stop()
-            if !session.events.isEmpty {
+            let all = capture.all()
+            guard all.count >= Int(4 * capture.sampleRate) else { err("Too short to chart: chordmap needs four seconds."); return 1 }
+            do {
+                let a = try Chordmap.analyze(all, sampleRate: capture.sampleRate)
                 let f = DateFormatter(); f.timeStyle = .short
-                History.add(Listen(started: session.started, title: "Listen at \(f.string(from: session.started))", seconds: Date().timeIntervalSince(session.started), key: session.key, events: session.events))
-            }
-            return report(session: session, capo: nil, json: js)
+                History.add(Listen(started: began, title: "Listen at \(f.string(from: began))", seconds: capture.seconds, analysis: a))
+                return report(a, capo: nil, json: js)
+            } catch { err(error.localizedDescription); return 2 }
         case "loudness":
             // Each preset's average gain on the synthesised kit; presets are trimmed so this sits near 0 dB.
             let kit = Synth.kit(seconds: 4, sampleRate: 48000); let inRms = Measure.rms(kit)
@@ -226,21 +243,27 @@ enum CLI {
         }
     }
 
-    static func report(session s: EarSession, capo: Int?, json js: Bool) -> Int32 {
-        let flats = s.key?.flats ?? false
-        var names: [(Double, String)] = []
-        for e in s.events { let n = capo.map { e.chord.shape(capo: $0).name(flats: flats) } ?? e.chord.name(flats: flats); if names.last?.1 != n { names.append((e.at, n)) } }
-        let options = s.key.map { Capo.options(for: $0) } ?? []
+    static func report(_ a: Analysis, capo: Int?, json js: Bool) -> Int32 {
         if js {
-            out(json(["key": s.key?.name ?? "", "capo": options.map { ["fret": $0.fret, "playIn": $0.shapeKey.name, "ease": $0.ease] }, "chords": names.map { ["at": ($0.0 * 10).rounded() / 10, "chord": $0.1] }]))
-        } else {
-            guard !names.isEmpty else { out("No chords heard."); return 1 }
-            out("Key: \(s.key?.name ?? "unknown")")
-            for o in options.prefix(3) { out((o.ease == 0 ? "  " : "  ") + o.line + (o.ease == 0 ? "  (easiest)" : "")) }
-            if let capo { out("Shapes with capo \(capo):") }
-            out(names.map { String(format: "%@ (%d:%02d)", $0.1, Int($0.0) / 60, Int($0.0) % 60) }.joined(separator: "  "))
+            let e = JSONEncoder(); e.outputFormatting = [.prettyPrinted, .sortedKeys]
+            out(String(decoding: (try? e.encode(a)) ?? Data(), as: UTF8.self)); return 0
         }
-        return names.isEmpty ? 1 : 0
+        let flats = Pitch.usesFlats(a.key)
+        out("Key: \(a.key.name)" + (a.key.confidence < 0.1 ? " (or \(a.key.alternative))" : ""))
+        out(String(format: "Tempo: %.0f bpm, %@", a.tempo.bpm, a.meter))
+        let pick = a.guitar.capo
+        out(pick == 0 ? "Capo: none, every shape open" : "Capo \(pick): " + a.guitar.shapes.sorted { $0.key < $1.key }.map { "\($0.key) → \($0.value)" }.joined(separator: ", "))
+        for o in a.capoOptionsByEase.prefix(3) where o.capo != pick { out(String(format: "  or capo %d, %.0f s of barre chords", o.capo, o.hardSeconds)) }
+        for w in a.warnings { out("Note: \(w)") }
+        if let capo, capo != 0 {
+            out("Shapes with capo \(capo):")
+            var names: [String] = []
+            for c in a.chords where c.label != "N" { let n = Pitch.shape(c.label, capo: capo, flats: flats); if names.last != n { names.append(n) } }
+            out(names.joined(separator: "  "))
+        } else {
+            out(""); out(Chordmap.chordSheet(a))
+        }
+        return a.chords.isEmpty ? 1 : 0
     }
 
     /// --params file wins, then --preset, then the saved knobs, then Rock Room.

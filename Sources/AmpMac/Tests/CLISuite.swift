@@ -51,12 +51,14 @@ enum CLISuite {
         TestCase(name: "chords on a recording finds the key and the capo") { t in
             let dir = TestKit.tempDir(); defer { try? FileManager.default.removeItem(at: dir) }
             let f = dir.appendingPathComponent("chords.wav").path
-            t.equal(run("tone", [f, "--chords"]).code, 0, "tone --chords")
+            t.equal(run("tone", [f, "--chords", "--loops", "1"]).code, 0, "tone --chords")
             let (c, o) = run("chords", [f])
-            t.equal(c, 0, "exit"); t.check(o.contains("Key: C major"), "key: \(o)"); t.check(o.contains("No capo, play in C major"), "capo: \(o)")
-            t.check(o.contains("C (0:0") && o.contains("Am ("), "chords in order: \(o)")
-            let (c2, o2) = run("chords", [f, "--capo", "3", "--json"])
-            t.equal(c2, 0, "exit"); t.check(o2.contains("\"chord\" : \"A\""), "capo 3 shows C as an A shape: \(o2)")
+            t.equal(c, 0, "exit"); t.check(o.contains("Key: C major"), "key: \(o)"); t.check(o.contains("Capo: none"), "capo: \(o)"); t.check(o.contains("Tempo:"), "tempo: \(o)")
+            let (c2, o2) = run("chords", [f, "--capo", "3"])
+            t.equal(c2, 0, "exit"); t.check(o2.contains("Shapes with capo 3:") && o2.contains(" A "), "capo 3 shows C as an A shape: \(o2)")
+            let (c3, o3) = run("chords", [f, "--json"])
+            t.equal(c3, 0, "exit"); t.check(o3.contains("\"guitar\"") && o3.contains("\"tonic\" : \"C\""), "json: \(o3.prefix(200))")
+            t.equal(run("tone", [f, "--chords", "nonsense here"]).code, 64, "bad progression is a usage error")
         },
     ]) }
 }

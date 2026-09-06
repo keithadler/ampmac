@@ -9,6 +9,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: swift --version
+      - run: rustup target add x86_64-apple-darwin || true
+      - run: ffi/build.sh
       - run: swift build
       - run: .build/debug/AmpMac selftest
       - run: swift test

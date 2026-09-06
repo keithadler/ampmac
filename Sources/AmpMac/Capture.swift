@@ -2,7 +2,8 @@
 //
 //  Sound for the Ear: either the Mac's own output through a Core Audio process tap (macOS 14.2 or
 //  later; the tap leaves out this app's own process, so the amp is not heard twice) or any input
-//  device. Samples go into a ring buffer, brought down to 48 kHz or under. Nothing is written.
+//  device. Samples are kept in memory for the length of the listen, brought down to 24 kHz
+//  (plenty for chords; chordmap works at 22 kHz inside). Nothing is written to disk.
 
 import Foundation
 import CoreAudio
@@ -25,10 +26,11 @@ final class Capture: @unchecked Sendable {
     private var tap: AudioObjectID = 0
     private var aggregate: AudioDeviceID = 0
     private var lock = os_unfair_lock()
-    private var ring: [Float] = []
-    private var writeIndex = 0
+    private var store: [Float] = []
     private var acc: Float = 0, accCount = 0
     private(set) var frames: UInt64 = 0
+    /// Ten minutes at 24 kHz; after that the oldest minute is dropped.
+    static let maxSamples = 24000 * 600
 
     func start(_ source: Source) throws {
         if running { stop() }
@@ -40,9 +42,9 @@ final class Capture: @unchecked Sendable {
             device = try makeTap()
         }
         deviceRate = Devices.sampleRate(device); if deviceRate == 0 { deviceRate = 48000 }
-        factor = max(1, Int((deviceRate / 48000).rounded(.up)))
+        factor = max(1, Int((deviceRate / 24000).rounded(.up)))
         sampleRate = deviceRate / Double(factor)
-        ring = [Float](repeating: 0, count: Int(sampleRate * 4)); writeIndex = 0; acc = 0; accCount = 0; frames = 0
+        store = []; store.reserveCapacity(Int(sampleRate * 60)); acc = 0; accCount = 0; frames = 0
         var id: AudioDeviceIOProcID?
         let status = AudioDeviceCreateIOProcIDWithBlock(&id, device, nil) { [weak self] _, input, _, _, _ in self?.ingest(input) }
         guard status == noErr, let id else { tearDownTap(); throw EngineError(message: "Could not open the sound for listening (CoreAudio error \(status)).") }
@@ -62,13 +64,12 @@ final class Capture: @unchecked Sendable {
     /// The most recent `seconds` of sound, oldest first.
     func latest(seconds: Double) -> [Float] {
         os_unfair_lock_lock(&lock); defer { os_unfair_lock_unlock(&lock) }
-        let n = min(Int(seconds * sampleRate), ring.count)
-        guard n > 0, frames >= UInt64(n) else { return [] }
-        var out = [Float](repeating: 0, count: n)
-        var idx = (writeIndex - n + ring.count) % ring.count
-        for i in 0..<n { out[i] = ring[idx]; idx += 1; if idx == ring.count { idx = 0 } }
-        return out
+        let n = min(Int(seconds * sampleRate), store.count)
+        return n > 0 ? Array(store.suffix(n)) : []
     }
+    /// Everything heard since start.
+    func all() -> [Float] { os_unfair_lock_lock(&lock); defer { os_unfair_lock_unlock(&lock) }; return store }
+    var seconds: Double { os_unfair_lock_lock(&lock); defer { os_unfair_lock_unlock(&lock) }; return Double(store.count) / sampleRate }
 
     // MARK: Audio thread
 
@@ -86,8 +87,8 @@ final class Capture: @unchecked Sendable {
             for b in 1..<list.count { if let d = list[b].mData, i < Int(list[b].mDataByteSize) / 4 { m += d.assumingMemoryBound(to: Float.self)[i] } }
             acc += m / Float(channels); accCount += 1
             if accCount == factor {
-                ring[writeIndex] = acc / Float(factor); writeIndex += 1; if writeIndex == ring.count { writeIndex = 0 }
-                acc = 0; accCount = 0; frames &+= 1
+                store.append(acc / Float(factor)); acc = 0; accCount = 0; frames &+= 1
+                if store.count > Capture.maxSamples { store.removeFirst(Int(sampleRate * 60)) }
             }
         }
         os_unfair_lock_unlock(&lock)

@@ -23,9 +23,10 @@ for p in "Clean Kit" "Tight Pop" "Rock Room" "Garage" "Arena" "Dry Punch" "Lo-fi
 done
 check "render rejects an unknown preset" '"$BIN" render "$AMPMAC_HOME/kit.wav" "$AMPMAC_HOME/out.wav" --preset nope >/dev/null 2>&1; [ $? = 1 ]'
 check "render without files is a usage error" '"$BIN" render >/dev/null 2>&1; [ $? = 64 ]'
-check "tone --chords writes C G Am F" '"$BIN" tone "$AMPMAC_HOME/chords.wav" --chords | grep -q "C G Am F"'
+check "tone --chords writes C G Am F" '"$BIN" tone "$AMPMAC_HOME/chords.wav" --chords --loops 1 | grep -q "C G Am F"'
 check "chords hears C major" '"$BIN" chords "$AMPMAC_HOME/chords.wav" | grep -q "Key: C major"'
-check "chords --json lists the capo choices" '"$BIN" chords "$AMPMAC_HOME/chords.wav" --json | grep -q "playIn"'
+check "chords --json carries chordmap's guitar section" '"$BIN" chords "$AMPMAC_HOME/chords.wav" --json | grep -q "\"guitar\""'
+check "status names the chordmap version" '"$BIN" status --json | grep -q "\"chordmap\" : \"1."'
 check "Info.plist carries the system audio string" 'grep -q NSAudioCaptureUsageDescription Info.plist'
 # The microphone usage string: without it macOS kills the app the moment it opens the input.
 check "Info.plist carries the microphone string" 'grep -q NSMicrophoneUsageDescription Info.plist'

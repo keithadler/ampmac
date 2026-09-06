@@ -1,0 +1,20 @@
+# The bridge from Amp for Mac to chordmap (https://github.com/keithadler/chordmap): a static
+# library with a C face. Built by ffi/build.sh; Package.swift links ffi/lib/libchordmap_ffi.a.
+[package]
+name = "chordmap-ffi"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+chordmap = { git = "https://github.com/keithadler/chordmap", tag = "v1.0.0" }
+serde_json = "1"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"

@@ -13,7 +13,15 @@ cd "$(dirname "$0")"
 # Universal (Intel + Apple Silicon) by default. The Command Line Tools can't do a two-arch build in one
 # go (that needs Xcode's xcbuild), so each slice is built separately and joined with lipo.
 # Set ARCHS to one triple for a quick local build, e.g. ARCHS=arm64-apple-macosx ./build-app.sh
-ARCHS="${ARCHS:-arm64-apple-macosx x86_64-apple-macosx}"
+# The Ear is chordmap, a Rust static library: build it first, then only the architectures it has.
+./ffi/build.sh | tail -1
+LIBARCHS="$(lipo -archs ffi/lib/libchordmap_ffi.a)"
+if [ -z "${ARCHS:-}" ]; then
+  ARCHS=""
+  case "$LIBARCHS" in *arm64*) ARCHS="$ARCHS arm64-apple-macosx";; esac
+  case "$LIBARCHS" in *x86_64*) ARCHS="$ARCHS x86_64-apple-macosx";; esac
+  [[ "$LIBARCHS" == *x86_64* ]] || echo "Note: Intel slice skipped; run 'rustup target add x86_64-apple-darwin' for a universal build."
+fi
 SLICES=()
 for triple in $ARCHS; do
   echo "Building ${triple}..."

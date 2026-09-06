@@ -12,6 +12,6 @@ final class SuiteTests: XCTestCase {
     @MainActor func testPresets() { runSuite("Presets") }
     @MainActor func testDevices() { runSuite("Devices") }
     @MainActor func testLevel() { runSuite("Level") }
-    @MainActor func testEar() { runSuite("Ear") }
+    @MainActor func testChordmap() { runSuite("Chordmap") }
     @MainActor func testCLI() { runSuite("CLI") }
 }

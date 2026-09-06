@@ -38,15 +38,17 @@ enum Screenshots {
                 settle(); written.append(try capture(w, to: dir.appendingPathComponent("\(name)\(suffix).png"))); w.orderOut(nil)
             }
         }
-        // The Ear, mid-song, in Eb with capo 3 chosen.
+        // The Ear, mid-song, in Eb with chordmap's capo pick, over two earlier listens.
         let ear = EarModel.shared; ear.demo = true
         History.overrideDir = TestKit.tempDir(); defer { History.overrideDir = nil }
-        let eb = Key(root: 3, minor: false)
-        let prog: [(Double, Int, Chord.Quality)] = [(0.4, 3, .major), (2.1, 8, .major), (3.9, 10, .major), (5.8, 0, .minor), (7.6, 3, .major), (9.5, 8, .major), (11.3, 10, .major), (13.1, 3, .major)]
-        let evs = prog.map { ChordEvent(at: $0.0, chord: Chord(root: $0.1, quality: $0.2)) }
-        ear.listens = [Listen(started: Date().addingTimeInterval(-86400 * 2), title: "Sam's song, Tuesday", seconds: 212, key: Key(root: 7, minor: false), events: [ChordEvent(at: 1, chord: Chord(root: 7, quality: .major)), ChordEvent(at: 3, chord: Chord(root: 0, quality: .major)), ChordEvent(at: 5, chord: Chord(root: 2, quality: .major))]),
-                       Listen(started: Date().addingTimeInterval(-3600), title: "Radio, this morning", seconds: 95, key: Key(root: 9, minor: true), events: [ChordEvent(at: 1, chord: Chord(root: 9, quality: .minor)), ChordEvent(at: 3, chord: Chord(root: 5, quality: .major)), ChordEvent(at: 5, chord: Chord(root: 0, quality: .major)), ChordEvent(at: 7, chord: Chord(root: 7, quality: .major))])]
-        ear.viewing = nil; ear.listening = true; ear.key = eb; ear.capo = 3; ear.events = evs; ear.chord = Chord(root: 10, quality: .major); ear.elapsed = 14
+        let (x, xr) = Chordmap.synth("Eb Ab Bb Cm", bpm: 96, loops: 2)
+        let a = (try? Chordmap.analyze(x, sampleRate: xr))
+        let (g, gr) = Chordmap.synth("G C D G", bpm: 120, loops: 1), (m, mr) = Chordmap.synth("Am F C G", bpm: 84, loops: 1)
+        if let ga = try? Chordmap.analyze(g, sampleRate: gr), let ma = try? Chordmap.analyze(m, sampleRate: mr) {
+            ear.listens = [Listen(started: Date().addingTimeInterval(-86400 * 2), title: "Sam's song, Tuesday", seconds: 212, analysis: ga),
+                           Listen(started: Date().addingTimeInterval(-3600), title: "Radio, this morning", seconds: 95, analysis: ma)]
+        }
+        ear.viewing = nil; ear.whole = nil; ear.window = a; ear.listening = true; ear.capo = nil; ear.chord = "Bb"; ear.elapsed = 38
         model.mode = .ear
         for (suffix, appearance) in [("", NSAppearance.Name.darkAqua), ("-light", .aqua)] {
             app.appearance = NSAppearance(named: appearance)
@@ -56,7 +58,7 @@ enum Screenshots {
             w.center(); w.makeKeyAndOrderFront(nil)
             settle(); written.append(try capture(w, to: dir.appendingPathComponent("ear\(suffix).png"))); w.orderOut(nil)
         }
-        ear.listening = false; ear.demo = false; ear.events = []; ear.key = nil; ear.chord = nil; ear.listens = History.load(); model.mode = .amp
+        ear.listening = false; ear.demo = false; ear.window = nil; ear.chord = nil; ear.listens = History.load(); model.mode = .amp
         model.running = false; model.demo = false
         if announce { written += try Promo.render(to: dir, screenshots: dir) }
         return written
