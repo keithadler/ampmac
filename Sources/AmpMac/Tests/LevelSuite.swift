@@ -15,15 +15,15 @@ enum LevelSuite {
         TestCase(name: "auto level walks toward the target and stops there") { t in
             var g: Float = 0
             for _ in 0..<200 { g = Level.autoStep(gain: g, rawPeakDb: -30) }
-            t.check(g > 18 && g <= 20, "quiet input raised to within the dead band of 20 dB: \(g)")
+            t.check(abs(g - 12) < 0.01, "quiet input raised by at most 12 dB: \(g)")
             g = 0
             for _ in 0..<200 { g = Level.autoStep(gain: g, rawPeakDb: -4) }
-            t.check(g < -4 && g >= -6, "hot input pulled down to within the dead band of -6 dB: \(g)")
-            t.equal(Level.autoStep(gain: 3, rawPeakDb: -12), 3, "within 1.5 dB it holds still")
+            t.check(g < -8 && g >= -10, "hot input pulled down to within the dead band of -10 dB: \(g)")
+            t.equal(Level.autoStep(gain: 3, rawPeakDb: -16), 3, "within 1.5 dB it holds still")
             t.equal(Level.autoStep(gain: 3, rawPeakDb: -70), 3, "silence changes nothing")
             t.equal(Level.autoStep(gain: 3, rawPeakDb: 0), 3, "clipping changes nothing; that is the knob's job")
-            t.equal(Level.autoStep(gain: 0.1, rawPeakDb: -10), 0.1, "steps are a quarter dB")
-            t.check(Level.autoStep(gain: 24, rawPeakDb: -50) <= 24, "capped")
+            t.equal(Level.autoStep(gain: 0.1, rawPeakDb: -14), 0.1, "steps are a quarter dB")
+            t.check(Level.autoStep(gain: 12, rawPeakDb: -40) <= 12, "capped at 12")
         },
         TestCase(name: "recent peak holds for the window then lets go") { t in
             var r = Level.Recent(); let now = Date()

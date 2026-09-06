@@ -53,7 +53,7 @@
 <p>Move any knob and the preset shows "edited"; Revert puts it back. Save… keeps your knobs under a name of your own, in the Mine section. ⌘1 to ⌘9 jump between the first nine presets, and the menu bar icon switches them while the window is hidden.</p>
 
 <h2 id="level">Level guide</h2>
-<p>While the amp runs, a line under the status reads the raw input and says what to do with the gain knob on the interface: clipping means turn it down, quiet means turn it up, good means leave it. Auto level, on by default in the Levels card, then trims the amp's own input gain a quarter dB at a time so hits land near -10 dB. Clipping at the interface is the knob's job; no setting in the app can undo it.</p>
+<p>While the amp runs, a line under the status reads the raw input and says what to do with the gain knob on the interface: clipping means turn it down, quiet means turn it up, good means leave it. Auto level, off until you switch it on in the Levels card, then trims the amp's own input gain a quarter dB at a time, up to 12 dB, so hits land near -14 dB. Every preset carries an output trim so all of them land at the same loudness as what went in. Clipping at the interface is the knob's job; no setting in the app can undo it.</p>
 
 <h2 id="ear">The Ear</h2>
 <p>Switch to Ear at the top of the window (or ⌘E). Press the ear and play a song on the Mac. The Ear names each chord as it goes by, works out the key after a few bars, and lists capo positions. Every quarter second it looks at the last six tenths of a second of sound, sorts the energy into the twelve notes, and picks the chord that fits best; a chord has to win twice in a row to count.</p>
@@ -68,6 +68,7 @@
 <h2 id="limits">Honest limits</h2>
 <ul>
 <li>It is a standalone amp, not a plugin. It will not load in Logic or Live.</li>
+<li>A microphone in the same room as the monitors feeds back through any amp with gain in it. Headphones, or monitors kept low and away from the kit, are the fix. Keep auto level off in that room.</li>
 <li>Latency is the interface's: two buffers plus what the interface reports. The status line shows the number. The Mac's own input and speakers are slower and feed back.</li>
 <li>The Ear hears chords the way a tuner hears pitch: well on a clear mix, less well on a wall of distortion, and it does not know a song's name. Major and minor triads and sevenths; no slash chords, no sus.</li>
 <li>Input and output on different devices are joined by a private aggregate device for the run. That works; one interface for both is simpler.</li>

@@ -1,6 +1,7 @@
 //  Amp for Mac — MIT licensed. See LICENSE.
 //
-//  Seventeen presets built for a drum kit: seven rooms and ten sounds people know by ear, and the user's own saved beside them.
+//  Seventeen presets built for a drum kit: seven rooms and ten sounds people know by ear.
+//  Each carries an output trim so all of them land at about the same loudness (see `ampmac loudness`)., and the user's own saved beside them.
 
 import Foundation
 
@@ -16,12 +17,14 @@ enum Presets {
         func make(_ name: String, _ edit: (inout AmpParams) -> Void) -> Preset { var p = AmpParams(); edit(&p); return Preset(name: name, params: p, builtIn: true) }
         return [
             make("Clean Kit") { p in
+                p.outputGain = 1
                 p.gateThreshold = -48; p.gateRelease = 120
                 p.attack = 0; p.sustain = 0
                 p.compThreshold = -20; p.compRatio = 2; p.compAttack = 10; p.compRelease = 100; p.compMakeup = 2; p.compMix = 60
                 p.roomOn = false
             },
             make("Tight Pop") { p in
+                p.outputGain = -2
                 p.gateThreshold = -40; p.gateRelease = 60
                 p.attack = 35; p.sustain = -20
                 p.compThreshold = -18; p.compRatio = 4; p.compAttack = 10; p.compRelease = 80; p.compMakeup = 4; p.compMix = 80
@@ -30,6 +33,7 @@ enum Presets {
                 p.roomOn = true; p.roomSize = 20; p.roomMix = 12
             },
             make("Rock Room") { p in
+                p.outputGain = -5
                 p.gateThreshold = -42; p.gateRelease = 80
                 p.attack = 25; p.sustain = 10
                 p.compThreshold = -20; p.compRatio = 4; p.compAttack = 15; p.compRelease = 120; p.compMakeup = 5; p.compMix = 70
@@ -38,6 +42,7 @@ enum Presets {
                 p.roomOn = true; p.roomSize = 45; p.roomMix = 25
             },
             make("Garage") { p in
+                p.outputGain = -7
                 p.gateThreshold = -50; p.gateRelease = 150
                 p.attack = 10; p.sustain = 30
                 p.compThreshold = -24; p.compRatio = 8; p.compAttack = 1; p.compRelease = 60; p.compMakeup = 8; p.compMix = 100
@@ -46,6 +51,7 @@ enum Presets {
                 p.roomOn = true; p.roomSize = 35; p.roomMix = 30
             },
             make("Arena") { p in
+                p.outputGain = -6
                 p.gateThreshold = -40; p.gateRelease = 100
                 p.attack = 40; p.sustain = 20
                 p.compThreshold = -18; p.compRatio = 3; p.compAttack = 20; p.compRelease = 200; p.compMakeup = 4; p.compMix = 60
@@ -54,6 +60,7 @@ enum Presets {
                 p.roomOn = true; p.roomSize = 85; p.roomMix = 35
             },
             make("Dry Punch") { p in
+                p.outputGain = -3
                 p.gateThreshold = -38; p.gateRelease = 40
                 p.attack = 60; p.sustain = -40
                 p.compThreshold = -16; p.compRatio = 6; p.compAttack = 3; p.compRelease = 50; p.compMakeup = 6; p.compMix = 90
@@ -62,6 +69,7 @@ enum Presets {
                 p.roomOn = false
             },
             make("Lo-fi") { p in
+                p.outputGain = -3.5
                 p.gateThreshold = -45; p.gateRelease = 80
                 p.attack = 0; p.sustain = 0
                 p.compThreshold = -30; p.compRatio = 10; p.compAttack = 1; p.compRelease = 40; p.compMakeup = 10; p.compMix = 100
@@ -70,6 +78,7 @@ enum Presets {
                 p.roomOn = true; p.roomSize = 30; p.roomMix = 20
             },
             make("Levee Stairwell") { p in
+                p.outputGain = -9.5
                 p.gateThreshold = -55; p.gateRelease = 250
                 p.attack = 15; p.sustain = 45
                 p.compThreshold = -22; p.compRatio = 4; p.compAttack = 30; p.compRelease = 250; p.compMakeup = 6; p.compMix = 70
@@ -78,6 +87,7 @@ enum Presets {
                 p.roomOn = true; p.roomSize = 90; p.roomMix = 45
             },
             make("In the Air") { p in
+                p.outputGain = -5
                 p.gateThreshold = -36; p.gateRelease = 30
                 p.attack = 30; p.sustain = 0
                 p.compThreshold = -18; p.compRatio = 4; p.compAttack = 5; p.compRelease = 60; p.compMakeup = 5; p.compMix = 100
@@ -86,6 +96,7 @@ enum Presets {
                 p.roomOn = true; p.roomSize = 75; p.roomMix = 60; p.roomGated = true
             },
             make("Motown") { p in
+                p.outputGain = -4
                 p.gateThreshold = -45; p.gateRelease = 100
                 p.attack = 10; p.sustain = -30
                 p.compThreshold = -20; p.compRatio = 6; p.compAttack = 3; p.compRelease = 80; p.compMakeup = 6; p.compMix = 100
@@ -94,6 +105,7 @@ enum Presets {
                 p.roomOn = true; p.roomSize = 15; p.roomMix = 10
             },
             make("Abbey Road") { p in
+                p.outputGain = -3
                 p.gateThreshold = -50; p.gateRelease = 150
                 p.attack = 0; p.sustain = 15
                 p.compThreshold = -24; p.compRatio = 8; p.compAttack = 1; p.compRelease = 150; p.compMakeup = 9; p.compMix = 100
@@ -102,6 +114,7 @@ enum Presets {
                 p.roomOn = true; p.roomSize = 25; p.roomMix = 18
             },
             make("Nevermind") { p in
+                p.outputGain = -5.5
                 p.gateThreshold = -42; p.gateRelease = 90
                 p.attack = 35; p.sustain = 10
                 p.compThreshold = -18; p.compRatio = 4; p.compAttack = 15; p.compRelease = 120; p.compMakeup = 5; p.compMix = 65
@@ -110,6 +123,7 @@ enum Presets {
                 p.roomOn = true; p.roomSize = 55; p.roomMix = 28
             },
             make("Boom Bap") { p in
+                p.outputGain = -2.5
                 p.gateThreshold = -40; p.gateRelease = 60
                 p.attack = 20; p.sustain = -50
                 p.compThreshold = -28; p.compRatio = 10; p.compAttack = 1; p.compRelease = 50; p.compMakeup = 12; p.compMix = 100
@@ -126,6 +140,7 @@ enum Presets {
                 p.roomOn = true; p.roomSize = 35; p.roomMix = 20
             },
             make("Tight Metal") { p in
+                p.outputGain = -5
                 p.gateThreshold = -34; p.gateRelease = 30
                 p.attack = 70; p.sustain = -60
                 p.compThreshold = -14; p.compRatio = 8; p.compAttack = 2; p.compRelease = 40; p.compMakeup = 6; p.compMix = 100
@@ -134,6 +149,7 @@ enum Presets {
                 p.roomOn = false
             },
             make("Dead 70s") { p in
+                p.outputGain = -1.5
                 p.gateThreshold = -45; p.gateRelease = 100
                 p.attack = 0; p.sustain = -60
                 p.compThreshold = -20; p.compRatio = 4; p.compAttack = 10; p.compRelease = 100; p.compMakeup = 4; p.compMix = 90
@@ -142,6 +158,7 @@ enum Presets {
                 p.roomOn = false
             },
             make("Disco") { p in
+                p.outputGain = -3
                 p.gateThreshold = -38; p.gateRelease = 40
                 p.attack = 40; p.sustain = -30
                 p.compThreshold = -18; p.compRatio = 6; p.compAttack = 5; p.compRelease = 60; p.compMakeup = 6; p.compMix = 100
@@ -190,6 +207,6 @@ enum Prefs {
     }
     static var menuBar: Bool { get { defaults.object(forKey: "menuBar") as? Bool ?? true } set { defaults.set(newValue, forKey: "menuBar") } }
     static var resumeOnOpen: Bool { get { defaults.object(forKey: "resumeOnOpen") as? Bool ?? false } set { defaults.set(newValue, forKey: "resumeOnOpen") } }
-    static var autoLevel: Bool { get { defaults.object(forKey: "autoLevel") as? Bool ?? true } set { defaults.set(newValue, forKey: "autoLevel") } }
+    static var autoLevel: Bool { get { defaults.object(forKey: "autoLevel") as? Bool ?? false } set { defaults.set(newValue, forKey: "autoLevel") } }
     static var wasRunning: Bool { get { defaults.bool(forKey: "wasRunning") } set { defaults.set(newValue, forKey: "wasRunning") } }
 }

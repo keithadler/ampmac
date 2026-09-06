@@ -18,7 +18,7 @@ Plug a mic or a trigger into the interface, press the power button, play. The ch
 
 Seventeen presets: seven rooms (Clean Kit, Tight Pop, Rock Room, Garage, Arena, Dry Punch, Lo-fi) and ten sounds people know by ear (Levee Stairwell, In the Air, Motown, Abbey Road, Nevermind, Boom Bap, Blue Note, Tight Metal, Dead 70s, Disco). Save your own beside them; ⌘1 to ⌘9 jump between the first nine.
 
-A level guide reads the raw input and says which way to turn the gain knob on the interface. Auto level then trims the amp's own input gain so hits land near -10 dB. Clipping at the interface is the knob's job, and the guide says so.
+A level guide reads the raw input and says which way to turn the gain knob on the interface. Auto level, off unless you switch it on, then trims the amp's own input gain by up to 12 dB so hits land near -14 dB. Clipping at the interface is the knob's job, and the guide says so. Every preset is trimmed to land at the same loudness as what went in, so switching presets never jumps the volume.
 
 Round trip on a Scarlett Solo is a few milliseconds: two buffers plus what the interface reports. 128 frames is the default; 64 is fine on Apple Silicon. The number is in the status line.
 
@@ -38,6 +38,7 @@ The Ear hears chords the way a tuner hears pitch: well on a clear mix, less well
 - Turn the interface's direct-monitor knob or switch off, or you hear the dry kit and the amp together.
 - Latency is the interface's. A USB interface at 128 frames is about 5 to 8 ms round trip; the Mac's built-in input and speakers are slower and feed back.
 - The limiter keeps the output under full scale; it cannot un-clip an input that arrived clipped.
+- A microphone in the same room as the monitors will feed back through any amp with gain in it. Headphones, or monitors kept low and away from the kit, are the fix; the app keeps its presets at unity to help.
 - The Ear has no idea what song is playing, only what key and chords it hears.
 
 ## Command line

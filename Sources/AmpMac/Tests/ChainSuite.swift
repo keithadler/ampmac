@@ -23,7 +23,7 @@ enum ChainSuite {
         },
         TestCase(name: "every preset changes the kit and stays under the ceiling") { t in
             let kit = Synth.kit(seconds: 2, sampleRate: 48000)
-            var sounds = Set<Int>()
+            var outputs: [(String, [Float])] = []
             for p in Presets.builtIn {
                 let c = Chain(sampleRate: 48000, params: p.params)
                 let (l, r) = c.render(kit)
@@ -32,9 +32,20 @@ enum ChainSuite {
                 t.check(peak <= dbToGain(-0.5) + 1e-5, "\(p.name) peaks at \(peak)")
                 let diff = zip(kit, l).map { abs($0 - $1) }.max() ?? 0
                 t.check(diff > 0.01, "\(p.name) does something")
-                sounds.insert(Int(Measure.rms(l) * 1e5))
+                outputs.append((p.name, Array(l[24000..<72000])))
             }
-            t.check(sounds.count == Presets.builtIn.count, "presets sound different from each other: \(sounds.count) of \(Presets.builtIn.count)")
+            for i in outputs.indices { for j in outputs.indices where j > i {
+                let diff = zip(outputs[i].1, outputs[j].1).map { abs($0 - $1) }.max() ?? 0
+                t.check(diff > 0.02, "\(outputs[i].0) and \(outputs[j].0) sound the same (largest difference \(diff))")
+            } }
+        },
+        TestCase(name: "presets are loudness-matched, none louder than the kit that went in") { t in
+            let kit = Synth.kit(seconds: 4, sampleRate: 48000); let inRms = Measure.rms(kit)
+            for p in Presets.builtIn {
+                let (l, r) = Chain(sampleRate: 48000, params: p.params).render(kit)
+                let g = gainToDb((Measure.rms(l) + Measure.rms(r)) / 2 / inRms)
+                t.check(abs(g) <= 1.5, "\(p.name) averages \(g) dB against the input; presets must sit within 1.5 dB of unity")
+            }
         },
         TestCase(name: "knobs change without a click") { t in
             var flat = AmpParams.flat

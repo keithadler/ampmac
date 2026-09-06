@@ -204,6 +204,15 @@ enum CLI {
                 History.add(Listen(started: session.started, title: "Listen at \(f.string(from: session.started))", seconds: Date().timeIntervalSince(session.started), key: session.key, events: session.events))
             }
             return report(session: session, capo: nil, json: js)
+        case "loudness":
+            // Each preset's average gain on the synthesised kit; presets are trimmed so this sits near 0 dB.
+            let kit = Synth.kit(seconds: 4, sampleRate: 48000); let inRms = Measure.rms(kit)
+            for p in Presets.builtIn {
+                let (l, r) = Chain(sampleRate: 48000, params: p.params).render(kit)
+                let g = gainToDb((Measure.rms(l) + Measure.rms(r)) / 2 / inRms)
+                out(String(format: "%-16@ %+5.1f dB  (output knob %+.0f)", p.name, g, p.params.outputGain))
+            }
+            return 0
         case "screenshots":
             guard let dir = pos.first else { err("ampmac screenshots <dir>"); return 64 }
             do { let files = try MainActor.assumeIsolated { try Screenshots.render(to: URL(fileURLWithPath: dir), announce: flag("--announce", args)) }; for f in files { out(f.path) }; return 0 }
