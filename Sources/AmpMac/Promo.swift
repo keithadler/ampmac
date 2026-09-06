@@ -9,7 +9,7 @@ enum Promo {
         let out = dir.appendingPathComponent("promo"); try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
         var written: [URL] = []
         let cards: [(String, String, String, String?)] = [
-            ("1-hero", "Your kit through a drum amp.\nOn this Mac.", "Seventeen drum sounds, from Motown to Nevermind, in real time from the input of the interface you already own.", "amp.png"),
+            ("1-hero", "Your kit through a drum amp.\nOn this Mac.", "Seventeen drum sounds, from Detroit '65 to Seattle '91, in real time from the input of the interface you already own.", "amp.png"),
             ("2-card", "It hears the key.\nCapo 3, play in C.", "The Ear listens to whatever the Mac is playing, names the chords as they go by, and says where the capo goes so the easy shapes play it. Every listen is kept.", "ear.png"),
             ("3-honest", "It listens to one input.\nIt records nothing.", "Not a plugin, so it will not load in Logic. The delay is your interface's, a few milliseconds. Turn direct monitor off or you hear the kit twice.", "off.png"),
             ("4-free", "Free. Open source. Works on a recording too.", "ampmac render kit.wav kit-room.wav --preset \"Rock Room\"   MIT licensed, no server, no account.", nil),

@@ -4,9 +4,11 @@ import Foundation
 
 enum PresetsSuite {
     static var suite: TestSuite { TestSuite(name: "Presets", cases: [
-        TestCase(name: "seventeen built in, unique names, JSON round trip") { t in
-            t.equal(Presets.builtIn.count, 17, "count")
-            t.equal(Set(Presets.builtIn.map(\.name)).count, 17, "unique names")
+        TestCase(name: "built in by genre, unique names, JSON round trip") { t in
+            t.check(Presets.builtIn.count >= 36, "count: \(Presets.builtIn.count)")
+            t.equal(Set(Presets.builtIn.map(\.name)).count, Presets.builtIn.count, "unique names")
+            t.check(Presets.builtIn.allSatisfy { Presets.genres.contains($0.genre) }, "every preset has a listed genre")
+            t.check(Presets.genres.allSatisfy { !Presets.inGenre($0).isEmpty }, "every genre has a preset")
             for p in Presets.builtIn {
                 let back = Presets.params(fromJSON: Presets.json(p.params).data(using: .utf8)!)
                 t.check(back == p.params, "\(p.name) survives JSON")
@@ -23,14 +25,14 @@ enum PresetsSuite {
             var p = AmpParams(); p.drive = 77
             Prefs.userPresets = [Preset(name: "Sam's Basement", params: p), Preset(name: "Garage", params: p)]
             let all = Presets.all()
-            t.equal(all.count, 18, "one user preset joins the built in; the Garage copy is dropped")
+            t.equal(all.count, Presets.builtIn.count + 1, "one user preset joins the built in; the Garage copy is dropped")
             t.equal(Presets.named("Sam", user: Prefs.userPresets)?.params.drive, 77, "found by prefix")
             t.check(Presets.named("Garage")?.builtIn == true, "the built-in Garage wins")
         },
         TestCase(name: "old JSON without a newer knob still loads") { t in
             let old = "{\"drive\" : 33, \"roomOn\" : true}".data(using: .utf8)!
             let p = Presets.params(fromJSON: old)
-            t.equal(p?.drive, 33, "drive read"); t.equal(p?.roomOn, true, "roomOn read"); t.equal(p?.roomGated, false, "missing knob takes its default")
+            t.equal(p?.drive, 33, "drive read"); t.equal(p?.roomOn, true, "roomOn read"); t.equal(p?.roomGated, false, "missing knob takes its default"); t.equal(p?.presenceGain, 0, "presence defaults"); t.equal(p?.roomTone, 50, "room tone defaults")
             t.equal(p?.compRatio, 4, "missing knob takes its default")
         },
         TestCase(name: "saved knobs come back") { t in

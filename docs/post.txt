@@ -1,10 +1,10 @@
 Amp for Mac. Free, open source.
 
-A drum amp for the input of the interface you already own. Plug in, press the button, play: gate, punch, squash, tone, drive and a room, in real time, with seventeen sounds from Motown to Nevermind and your own saved next to them.
+A drum amp for the input of the interface you already own. Plug in, press the button, play: gate, punch, squash, tone, drive and a room, in real time, with thirty-nine sounds in twelve genres, all at one loudness, and your own saved next to them.
 
 It tells you which way to turn the gain knob, and every preset lands at the same loudness. Turn direct monitor off or you hear the kit twice; the delay is your interface's, a few milliseconds. It is not a plugin and will not load in Logic.
 
-The Ear: play a song on the Mac and it names the chords, the key, and where the capo goes so the easy shapes play it. Every listen is kept.
+The Ear, powered by chordmap: play a song on the Mac and it names the chords bar by bar, the key, the tempo, and where the capo goes so the easy shapes play it. Every listen is kept with its chord sheet.
 
 Nothing recorded, nothing leaves the Mac. Also a command line: ampmac render kit.wav out.wav --preset "Rock Room"
 

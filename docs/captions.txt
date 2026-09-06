@@ -1,12 +1,12 @@
 AMP FOR MAC
 ----------------------------------------------------------------------
 TikTok / Reels / Shorts caption:
-Free, open source Mac app: a drum amp for your audio interface. Plug in, press the button, play through Motown, Nevermind, the gated 80s room, seventeen sounds. It tells you which way to turn the gain knob. Bonus: play any song on the Mac and it names the chords, the key and where the capo goes. Safe: nothing recorded, nothing uploads, no account, the code is public. Get it: github.com/keithadler/ampmac
+Free, open source Mac app: a drum amp for your audio interface. Plug in, press the button, play through thirty-nine sounds in twelve genres, rock to reggae. It tells you which way to turn the gain knob. Bonus: play any song on the Mac and it names the chords, the key and where the capo goes. Safe: nothing recorded, nothing uploads, no account, the code is public. Get it: github.com/keithadler/ampmac
 #mac #macos #apple #macbook #freeapp #opensource #privacy #drums #drummer #guitar #musicproduction #techtok #fyp
 
 X post:
 Amp for Mac. Free, open source.
-A drum amp for the input of the interface you already own: gate, punch, squash, tone, drive, room, seventeen sounds from Motown to Nevermind. It says which way to turn the gain knob.
-The Ear names the chords and the key of any song the Mac plays and where the capo goes. Nothing recorded, nothing leaves the Mac. Not a plugin; the delay is your interface's.
+A drum amp for the input of the interface you already own: gate, punch, squash, tone, drive, room, thirty-nine sounds in twelve genres. It says which way to turn the gain knob.
+The Ear (chordmap inside) names the chords, key and tempo of any song the Mac plays and where the capo goes. Nothing recorded, nothing leaves the Mac. Not a plugin; the delay is your interface's.
 https://github.com/keithadler/ampmac
 #macOS #opensource #drums #guitar #indiedev

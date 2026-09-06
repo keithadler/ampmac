@@ -1,6 +1,6 @@
 # Amp for Mac
 
-A drum amp for the input of your audio interface, and an Ear that tells you the key, the chords and where the capo goes. It listens to one input and plays to one output. Nothing is recorded, nothing leaves the Mac.
+A drum amp for the input of your audio interface, and an Ear, powered by [chordmap](https://github.com/keithadler/chordmap), that tells you the key, the tempo, the chords bar by bar and where the capo goes. It listens to one input and plays to one output. Nothing is recorded, nothing leaves the Mac.
 
 ## Download
 
@@ -14,9 +14,9 @@ Two permissions, each asked for once, each explained in the dialog: **Microphone
 
 ## The amp
 
-Plug a mic or a trigger into the interface, press the power button, play. The chain is what a drum channel on a desk does, in order: a gate with hold, an attack and sustain shaper, a compressor with a mix knob for parallel squash, three-band tone with a rumble filter, drive, a stereo room that can cut with the gate, and a limiter half a dB under full. Every knob glides, so presets switch while you play.
+Plug a mic or a trigger into the interface, press the power button, play. The chain is what a drum channel on a desk does, in order: a gate with hold, an attack and sustain shaper, a compressor with a mix knob for parallel squash, four-band tone (low, a mid you place, the crack at 3.5 kHz, high) with a rumble filter, drive, a stereo room with its own tone that can cut with the gate, and a limiter half a dB under full. Every knob glides, so presets switch while you play.
 
-Seventeen presets: seven rooms (Clean Kit, Tight Pop, Rock Room, Garage, Arena, Dry Punch, Lo-fi) and ten sounds people know by ear (Levee Stairwell, In the Air, Motown, Abbey Road, Nevermind, Boom Bap, Blue Note, Tight Metal, Dead 70s, Disco). Save your own beside them; ⌘1 to ⌘9 jump between the first nine.
+Thirty-nine presets in twelve genres, named for the room, the town and the year rather than anyone's trademark: Rock (Rock Room, Arena, Seattle '91, Stairwell '71, Big Console, Mono '63, Grunge), Pop (Tight Pop, Gated '81, Disco, Radio Pop, Dry 2020s), Hip Hop (Boom Bap, Lo-fi, Trap Knock, Neo Soul), Jazz (Jazz Club, Brushes, Big Band), Metal (Tight Metal, Thrash, Doom), Soul & Funk (Detroit '65, Funk Dry, Memphis Soul), Country & Folk (Nashville, Americana), Punk & Garage (Garage, Bowery '76), Blues (Juke Joint, Chicago), Reggae (One Drop, Dub), Electronic (Dance, Industrial) and Studio (Clean Kit, Dry Punch, London '69, Dead 70s). Save your own beside them; ⌘1 to ⌘9 jump between the first nine.
 
 A level guide reads the raw input and says which way to turn the gain knob on the interface. Auto level, off unless you switch it on, then trims the amp's own input gain by up to 12 dB so hits land near -14 dB. Clipping at the interface is the knob's job, and the guide says so. Every preset is trimmed to land at the same loudness as what went in, so switching presets never jumps the volume.
 
@@ -26,11 +26,11 @@ Round trip on a Scarlett Solo is a few milliseconds: two buffers plus what the i
 
 ![The Ear](docs/screenshots/ear.png)
 
-Switch to Ear, press the ear, play a song on the Mac. It names each chord as it goes by, works out the key after a few bars, and lists where a capo goes so the open shapes play it (Eb: capo 3, play in C). Pick a capo and every chord shown becomes the shape your hand makes. It can also listen to an input, so a guitar into the interface works too.
+Switch to Ear, press the ear, play a song on the Mac. Every two seconds chordmap re-hears the last 24 seconds: the chord now, the key with its runner-up, the tempo and meter, the bars of the stretch grouped by section, and its capo pick with the shapes (Eb: capo 3, Eb → C, Ab → F, Bb → G). Choose another capo and every chord shown becomes the shape your hand makes. When you stop, the whole listen is charted, with chordmap's chord sheet to copy. It can also listen to an input, so a guitar into the interface works too.
 
-Every listen is kept, with its key and chords, in the sidebar. Retitle it, reopen it, delete it. The list lives in `~/Library/Application Support/Amp for Mac/listens.json` and nowhere else.
+Every listen is kept, with the whole chart, in the sidebar. Retitle it, reopen it, delete it. The list lives in `~/Library/Application Support/Amp for Mac/listens.json` and nowhere else.
 
-The Ear hears chords the way a tuner hears pitch: well on a clear mix, less well on a wall of distortion, and it does not know a song's name. Hearing the Mac's own sound needs macOS 14.2 or later.
+chordmap hears a clear mix well and a wall of distortion less well, flags sparse harmony instead of inventing chords, and does not know a song's name. Hearing the Mac's own sound needs macOS 14.2 or later.
 
 ## Honest limits
 
@@ -51,8 +51,9 @@ ampmac devices                         every audio device
 ampmac presets [<name>]                the presets, or one preset's knobs as JSON
 ampmac run --preset "Rock Room"        the amp from the terminal, meters and level advice once a second
 ampmac render kit.wav out.wav --preset Garage
-ampmac tone kit.wav                    a synthesised kit to try the amp with; --chords writes C G Am F
-ampmac chords song.wav [--capo 3]      the Ear on a recording
+ampmac tone kit.wav                    a synthesised kit to try the amp with
+ampmac tone song.wav --chords "C G Am F" --bpm 100   a strummed progression from chordmap's synth
+ampmac chords song.wav [--capo 3]      the Ear on a recording: key, tempo, capo, the chord sheet
 ampmac ear [--source mac|Scarlett]     the Ear live
 ampmac selftest                        the built-in tests
 ```
@@ -61,11 +62,13 @@ ampmac selftest                        the built-in tests
 
 ## Building
 
-Swift Package, macOS 14 or later, the Command Line Tools are enough.
+Swift Package, macOS 14 or later, the Command Line Tools plus Rust (rustup) for the chordmap bridge in `ffi/`.
 
 ```
 ./build-app.sh --install
 ```
+
+`ffi/build.sh` builds chordmap as a static library for every Apple target the Rust toolchain has; add `x86_64-apple-darwin` with rustup for a universal build.
 
 `./make-local-identity.sh` once makes a local signing certificate so permissions survive rebuilds. `ampmac selftest` and `tests/integration.sh` run the tests; the tests feed the chain synthesised hits and chords and never open a device.
 

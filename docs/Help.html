@@ -29,48 +29,52 @@
 <tr><td>Gate</td><td>Mutes what is under the threshold, opens on a hit, holds for a moment so a snare's ring is not chopped, then closes at the release speed.</td></tr>
 <tr><td>Attack &amp; Sustain</td><td>Attack up makes the stick hit louder; down softens it. Sustain up brings the ring and the room up behind the hit; down shortens it. Up to 12 dB either way.</td></tr>
 <tr><td>Compressor</td><td>Squashes what goes over the threshold by the ratio. Attack and release are how fast it grabs and lets go. Makeup brings the level back. Mix under 100 blends the squashed sound with the untouched one: the parallel trick.</td></tr>
-<tr><td>Tone</td><td>Low shelf at 90 Hz, a mid you can place, high shelf at 6 kHz, and a rumble filter at 30 Hz underneath.</td></tr>
+<tr><td>Tone</td><td>Low shelf at 90 Hz, a mid you can place, Crack (a peak at 3.5 kHz, where a snare's snap lives), high shelf at 6 kHz, and a rumble filter at 30 Hz underneath.</td></tr>
 <tr><td>Drive</td><td>Soft saturation. Drive 0 is a light touch; the switch is the true bypass. Tone after it, dark to bright.</td></tr>
-<tr><td>Room</td><td>A stereo room. Size is how long it rings, Mix how much. "Cut the room with the gate" is the eighties sound: a big room that stops dead.</td></tr>
+<tr><td>Room</td><td>A stereo room. Size is how long it rings, Mix how much, Tone dark to bright. "Cut the room with the gate" is the eighties sound: a big room that stops dead.</td></tr>
 <tr><td>Levels</td><td>Input gain, auto level, output gain, and the limiter, which keeps the output half a dB under full scale.</td></tr>
 </table>
 <p>The meters show input, output, whether the gate is open, and how much the compressor and the limiter are taking off.</p>
 
 <h2 id="presets">Presets</h2>
-<p>Seventeen built in. Seven rooms: Clean Kit, Tight Pop, Rock Room, Garage, Arena, Dry Punch, Lo-fi. Ten sounds people know by ear:</p>
+<p>Thirty-nine built in, in twelve genres, named for the room, the town and the year rather than anyone's trademark. Each is trimmed to land at the loudness of what went in, so switching never jumps the volume.</p>
 <table>
-<tr><td>Levee Stairwell</td><td>A huge slow room, long sustain, the drums recorded at the bottom of a stairwell.</td></tr>
-<tr><td>In the Air</td><td>The gated room of the eighties: a big splash that cuts off.</td></tr>
-<tr><td>Motown</td><td>Dry, tight, mid-forward, driven.</td></tr>
-<tr><td>Abbey Road</td><td>Heavy compression with a fast grab, warm, a small room.</td></tr>
-<tr><td>Nevermind</td><td>Big rock drums: punchy attack, scooped mids, a real room.</td></tr>
-<tr><td>Boom Bap</td><td>Crushed, dark, short: the sampler sound.</td></tr>
-<tr><td>Blue Note</td><td>Natural and warm, barely touched, for brushes and jazz.</td></tr>
-<tr><td>Tight Metal</td><td>Fast gate, hard attack, scooped, bright, no room.</td></tr>
-<tr><td>Dead 70s</td><td>Towels on the heads: short sustain, dull top, close and dry.</td></tr>
-<tr><td>Disco</td><td>Bright, tight, compressed, a gated room behind.</td></tr>
+<tr><th>Genre</th><th>Presets</th></tr>
+<tr><td>Rock</td><td>Rock Room, Arena, Seattle '91 (the big early-nineties rock kit: snare body, crack, a bright live room, hard parallel squash), Stairwell '71 (the huge slow stairwell room), Big Console (punchy, mid-forward, a medium room), Mono '63 (one enormous dark room), Grunge</td></tr>
+<tr><td>Pop</td><td>Tight Pop, Gated '81 (the gated room that stops dead), Disco, Radio Pop, Dry 2020s</td></tr>
+<tr><td>Hip Hop</td><td>Boom Bap, Lo-fi, Trap Knock, Neo Soul</td></tr>
+<tr><td>Jazz</td><td>Jazz Club, Brushes, Big Band</td></tr>
+<tr><td>Metal</td><td>Tight Metal, Thrash, Doom</td></tr>
+<tr><td>Soul &amp; Funk</td><td>Detroit '65, Funk Dry, Memphis Soul</td></tr>
+<tr><td>Country &amp; Folk</td><td>Nashville, Americana</td></tr>
+<tr><td>Punk &amp; Garage</td><td>Garage, Bowery '76</td></tr>
+<tr><td>Blues</td><td>Juke Joint, Chicago</td></tr>
+<tr><td>Reggae</td><td>One Drop, Dub</td></tr>
+<tr><td>Electronic</td><td>Dance, Industrial</td></tr>
+<tr><td>Studio</td><td>Clean Kit, Dry Punch, London '69 (fast heavy compression, warm, a small room), Dead 70s (towels on the heads)</td></tr>
 </table>
+<p>A preset shapes your kit; it cannot turn your kit into someone else's. One mic on input 2 hears one kit in one room. The knobs are there for the last mile.</p>
 <p>Move any knob and the preset shows "edited"; Revert puts it back. Save… keeps your knobs under a name of your own, in the Mine section. ⌘1 to ⌘9 jump between the first nine presets, and the menu bar icon switches them while the window is hidden.</p>
 
 <h2 id="level">Level guide</h2>
 <p>While the amp runs, a line under the status reads the raw input and says what to do with the gain knob on the interface: clipping means turn it down, quiet means turn it up, good means leave it. Auto level, off until you switch it on in the Levels card, then trims the amp's own input gain a quarter dB at a time, up to 12 dB, so hits land near -14 dB. Every preset carries an output trim so all of them land at the same loudness as what went in. Clipping at the interface is the knob's job; no setting in the app can undo it.</p>
 
 <h2 id="ear">The Ear</h2>
-<p>Switch to Ear at the top of the window (or ⌘E). Press the ear and play a song on the Mac. The Ear names each chord as it goes by, works out the key after a few bars, and lists capo positions. Every quarter second it looks at the last six tenths of a second of sound, sorts the energy into the twelve notes, and picks the chord that fits best; a chord has to win twice in a row to count.</p>
+<p>Switch to Ear at the top of the window (or ⌘E). Press the ear and play a song on the Mac. The Ear is <a href="https://github.com/keithadler/chordmap">chordmap</a>, an open-source engine for tempo, key, chords, sections and the capo, linked into the app. Every two seconds it re-hears the last 24 seconds and shows the chord now, the key with its runner-up when it is unsure, the tempo and meter, and the bars of that stretch grouped by section. When you stop, the whole listen is charted and chordmap's chord sheet appears with a Copy button.</p>
 <p>The source menu offers the Mac's own sound (macOS 14.2 or later; macOS asks once for system audio recording) and every input device. A guitar into the interface works as well as a song. The Ear leaves the amp's own output out of what it hears, so the two can run together.</p>
 
 <h2 id="capo">Capo</h2>
-<p>Once the key is known, the Capo card lists where a capo goes so open shapes play the song, easiest first. Eb major: capo 3, play in C. F minor: capo 1, play in Em. Choose one and every chord shown becomes the shape your hand makes; "Show the real chords" puts the sounding names back.</p>
+<p>chordmap scores every fret from 0 to 7 by how many seconds of the song land on barre or otherwise hard shapes, and picks the one with the least. The Capo card lists the best four with that number; its pick is marked. Choose another and every chord shown becomes the shape your hand makes, slash chords included.</p>
 
 <h2 id="history">History</h2>
-<p>When you stop the Ear, the listen is kept: its time, key, and the chords in order. It appears in the sidebar under "Heard before". Click one to see it again, retitle it in the field at the top, or delete it with the trash button. The list lives in <code>~/Library/Application Support/Amp for Mac/listens.json</code>, and only there.</p>
+<p>When you stop the Ear, the listen is kept with its whole chart: key, tempo, sections, bars. It appears in the sidebar under "Heard before". Click one to see it again, retitle it in the field at the top, or delete it with the trash button. The list lives in <code>~/Library/Application Support/Amp for Mac/listens.json</code>, and only there.</p>
 
 <h2 id="limits">Honest limits</h2>
 <ul>
 <li>It is a standalone amp, not a plugin. It will not load in Logic or Live.</li>
 <li>A microphone in the same room as the monitors feeds back through any amp with gain in it. Headphones, or monitors kept low and away from the kit, are the fix. Keep auto level off in that room.</li>
 <li>Latency is the interface's: two buffers plus what the interface reports. The status line shows the number. The Mac's own input and speakers are slower and feed back.</li>
-<li>The Ear hears chords the way a tuner hears pitch: well on a clear mix, less well on a wall of distortion, and it does not know a song's name. Major and minor triads and sevenths; no slash chords, no sus.</li>
+<li>chordmap hears a clear mix well and a wall of distortion less well, flags a stretch of sparse harmony instead of inventing chords for it, and does not know a song's name. Four seconds is the least it will chart.</li>
 <li>Input and output on different devices are joined by a private aggregate device for the run. That works; one interface for both is simpler.</li>
 </ul>
 
@@ -80,8 +84,9 @@ ampmac devices                         every audio device
 ampmac presets [&lt;name&gt;]                the presets, or one preset's knobs as JSON
 ampmac run --preset "Rock Room"        the amp from the terminal, meters and level advice once a second
 ampmac render kit.wav out.wav --preset Garage
-ampmac tone kit.wav [--chords]         a synthesised kit, or C G Am F, to try things with
-ampmac chords song.wav [--capo 3]      the Ear on a recording
+ampmac tone kit.wav                    a synthesised kit to try the amp with
+ampmac tone song.wav --chords "C G Am F" --bpm 100   a strummed progression from chordmap's synth
+ampmac chords song.wav [--capo 3]      the Ear on a recording: key, tempo, capo, the chord sheet
 ampmac ear [--source mac|Scarlett]     the Ear live
 ampmac selftest</pre>
 <p><code>--json</code> everywhere. Exit codes: 0 fine, 1 something to look at, 2 problem, 64 usage.</p>

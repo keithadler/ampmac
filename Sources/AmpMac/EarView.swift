@@ -29,7 +29,7 @@ final class EarModel: ObservableObject {
     private var started = Date()
     private var timer: DispatchSourceTimer?
     private let working = FlagBox()
-    static let windowSeconds = 24.0, everySeconds = 2.0
+    nonisolated static let windowSeconds = 24.0, everySeconds = 2.0
 
     init() {
         if let d = Prefs.defaults.data(forKey: "earSource"), let s = try? JSONDecoder().decode(Capture.Source.self, from: d) { source = s }

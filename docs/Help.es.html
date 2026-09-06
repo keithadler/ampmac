@@ -29,25 +29,25 @@
 <tr><td>Gate</td><td>Silencia lo que queda bajo el umbral, abre con el golpe, sostiene un momento para no cortar la cola de la caja y cierra a la velocidad del release.</td></tr>
 <tr><td>Attack &amp; Sustain</td><td>Attack arriba hace el golpe más fuerte; abajo lo suaviza. Sustain arriba sube la cola y la sala detrás del golpe; abajo la acorta. Hasta 12 dB en cada sentido.</td></tr>
 <tr><td>Compressor</td><td>Aplasta lo que supera el umbral según la relación. Attack y release son la velocidad con que agarra y suelta. Makeup devuelve el nivel. Mix por debajo de 100 mezcla el sonido comprimido con el intacto: la compresión en paralelo.</td></tr>
-<tr><td>Tone</td><td>Graves a 90 Hz, un medio que puedes colocar, agudos a 6 kHz, y un filtro de retumbo a 30 Hz por debajo.</td></tr>
+<tr><td>Tone</td><td>Graves a 90 Hz, un medio que puedes colocar, Crack (un pico a 3,5 kHz, donde vive el chasquido de la caja), agudos a 6 kHz, y un filtro de retumbo a 30 Hz por debajo.</td></tr>
 <tr><td>Drive</td><td>Saturación suave. Drive 0 es un toque ligero; el interruptor es el verdadero bypass. Tone después, de oscuro a brillante.</td></tr>
-<tr><td>Room</td><td>Una sala estéreo. Size es cuánto dura, Mix cuánto se oye. "Cut the room with the gate" es el sonido de los ochenta: una sala enorme que se corta en seco.</td></tr>
+<tr><td>Room</td><td>Una sala estéreo. Size es cuánto dura, Mix cuánto se oye, Tone de oscura a brillante. "Cut the room with the gate" es el sonido de los ochenta: una sala enorme que se corta en seco.</td></tr>
 <tr><td>Levels</td><td>Ganancia de entrada, nivel automático, ganancia de salida y el limitador, que deja la salida medio dB por debajo del máximo.</td></tr>
 </table>
 
 <h2 id="presets">Presets</h2>
-<p>Diecisiete de fábrica. Siete salas: Clean Kit, Tight Pop, Rock Room, Garage, Arena, Dry Punch, Lo-fi. Y diez sonidos que la gente reconoce de oído: Levee Stairwell (la escalera enorme), In the Air (la sala con gate de los ochenta), Motown (seco y con medios), Abbey Road (compresión fuerte y cálida), Nevermind (rock grande), Boom Bap (el sonido del sampler), Blue Note (natural, para escobillas), Tight Metal (gate rápido, brillante, sin sala), Dead 70s (toallas sobre los parches) y Disco (brillante, apretado, sala con gate).</p>
+<p>Treinta y nueve de fábrica, en doce géneros, con nombres de sala, ciudad y año en vez de marcas ajenas: Rock (Rock Room, Arena, Seattle '91, Stairwell '71, Big Console, Mono '63, Grunge), Pop (Tight Pop, Gated '81, Disco, Radio Pop, Dry 2020s), Hip Hop (Boom Bap, Lo-fi, Trap Knock, Neo Soul), Jazz (Jazz Club, Brushes, Big Band), Metal (Tight Metal, Thrash, Doom), Soul &amp; Funk (Detroit '65, Funk Dry, Memphis Soul), Country &amp; Folk (Nashville, Americana), Punk &amp; Garage (Garage, Bowery '76), Blues (Juke Joint, Chicago), Reggae (One Drop, Dub), Electronic (Dance, Industrial) y Studio (Clean Kit, Dry Punch, London '69, Dead 70s). Cada uno lleva un ajuste para sonar al mismo volumen que la entrada. Un preset da forma a tu batería; no la convierte en la de otro.</p>
 <p>Mueve un mando y el preset muestra "edited"; Revert lo devuelve. Save… guarda tus mandos con tu propio nombre, en la sección Mine. ⌘1 a ⌘9 saltan entre los nueve primeros.</p>
 
 <h2 id="level">Guía de nivel</h2>
 <p>Mientras el amplificador funciona, una línea bajo el estado lee la entrada en bruto y dice qué hacer con el mando de ganancia de la interfaz: si recorta, bájalo; si está bajo, súbelo; si está bien, déjalo. El nivel automático, apagado hasta que lo actives en la tarjeta Levels, ajusta luego la ganancia de entrada del amplificador un cuarto de dB cada vez, hasta 12 dB, para que los golpes queden cerca de -14 dB. Cada preset lleva un ajuste de salida para que todos suenen al mismo volumen que la entrada. El recorte en la interfaz es cosa del mando; ningún ajuste de la app puede deshacerlo.</p>
 
 <h2 id="ear">El Oído</h2>
-<p>Cambia a Ear arriba en la ventana (o ⌘E). Pulsa la oreja y pon una canción en el Mac. El Oído nombra cada acorde según pasa, deduce la tonalidad tras unos compases y lista posiciones de cejilla. Cada cuarto de segundo mira los últimos seis décimas de segundo, reparte la energía entre las doce notas y elige el acorde que mejor encaja; un acorde debe ganar dos veces seguidas para contar.</p>
+<p>Cambia a Ear arriba en la ventana (o ⌘E). Pulsa la oreja y pon una canción en el Mac. El Oído es <a href="https://github.com/keithadler/chordmap">chordmap</a>, un motor de código abierto para tempo, tonalidad, acordes, secciones y cejilla, integrado en la app. Cada dos segundos vuelve a oír los últimos 24 segundos y muestra el acorde actual, la tonalidad con su alternativa cuando duda, el tempo y el compás, y los compases de ese tramo agrupados por sección. Al parar, se traza toda la escucha y aparece la hoja de acordes de chordmap con un botón para copiarla.</p>
 <p>El menú de fuente ofrece el sonido del propio Mac (macOS 14.2 o posterior; macOS pide una vez la grabación de audio del sistema) y todas las entradas. Una guitarra en la interfaz funciona igual que una canción. El Oído deja fuera la salida del amplificador, así que ambos pueden funcionar a la vez.</p>
 
 <h2 id="capo">Cejilla</h2>
-<p>Con la tonalidad conocida, la tarjeta Capo lista dónde va la cejilla para tocar la canción con acordes abiertos, del más fácil al menos. Mi bemol mayor: cejilla en el 3, toca en Do. Fa menor: cejilla en el 1, toca en Mi menor. Elige una y cada acorde mostrado pasa a ser la forma que hace tu mano; "Show the real chords" devuelve los nombres reales.</p>
+<p>chordmap puntúa cada traste del 0 al 7 según los segundos de canción que caen en cejillas de dedo u otras formas difíciles, y elige el que menos tiene. La tarjeta Capo lista los cuatro mejores con esa cifra; su elección va marcada. Elige otro y cada acorde mostrado pasa a ser la forma que hace tu mano.</p>
 
 <h2 id="history">Historial</h2>
 <p>Al parar el Oído, la escucha se guarda: hora, tonalidad y acordes en orden. Aparece en la barra lateral bajo "Heard before". Haz clic para verla de nuevo, cámbiale el título en el campo de arriba o bórrala con la papelera. La lista vive en <code>~/Library/Application Support/Amp for Mac/listens.json</code>, y solo ahí.</p>
@@ -57,7 +57,7 @@
 <li>Es un amplificador independiente, no un plugin. No se carga en Logic ni en Live.</li>
 <li>Un micrófono en la misma sala que los monitores se acopla con cualquier amplificador que añada ganancia. Auriculares, o monitores bajos y lejos de la batería, son la solución.</li>
 <li>La latencia es la de la interfaz: dos búferes más lo que la interfaz declara. La línea de estado muestra la cifra.</li>
-<li>El Oído oye acordes como un afinador oye notas: bien en una mezcla clara, peor en un muro de distorsión, y no sabe cómo se llama la canción. Tríadas mayores y menores y séptimas; sin acordes con bajo cambiado ni suspendidos.</li>
+<li>chordmap oye bien una mezcla clara y peor un muro de distorsión, marca los tramos de armonía escasa en vez de inventar acordes, y no sabe cómo se llama la canción. Cuatro segundos es lo mínimo que traza.</li>
 </ul>
 
 <h2 id="cli">Terminal</h2>
@@ -66,8 +66,9 @@ ampmac devices                         todos los dispositivos de audio
 ampmac presets [&lt;nombre&gt;]              los presets, o los mandos de uno en JSON
 ampmac run --preset "Rock Room"        el amplificador desde la terminal
 ampmac render kit.wav out.wav --preset Garage
-ampmac tone kit.wav [--chords]         una batería sintetizada, o Do Sol Lam Fa
-ampmac chords cancion.wav [--capo 3]   el Oído sobre una grabación
+ampmac tone kit.wav                    una batería sintetizada
+ampmac tone cancion.wav --chords "C G Am F"   una progresión rasgueada del sintetizador de chordmap
+ampmac chords cancion.wav [--capo 3]   el Oído sobre una grabación: tonalidad, tempo, cejilla, la hoja de acordes
 ampmac ear [--source mac|Scarlett]     el Oído en directo
 ampmac selftest</pre>
 

@@ -30,6 +30,7 @@ struct AmpParams: Codable, Equatable {
     var lowGain: Float = 0              // dB, shelf at 90 Hz
     var midGain: Float = 0              // dB, peak
     var midFreq: Float = 500            // Hz
+    var presenceGain: Float = 0         // dB, peak at 3.5 kHz: the crack of the snare
     var highGain: Float = 0             // dB, shelf at 6 kHz
     var driveOn = false
     var drive: Float = 0                // 0...100
@@ -37,6 +38,7 @@ struct AmpParams: Codable, Equatable {
     var roomOn = false
     var roomSize: Float = 40            // 0...100
     var roomMix: Float = 20             // %
+    var roomTone: Float = 50            // 0 dark ... 100 bright
     var roomGated = false               // the room cuts with the gate: the 80s sound
     var outputGain: Float = 0           // dB
     var limiterOn = true
@@ -50,9 +52,9 @@ struct AmpParams: Codable, Equatable {
         inputGain = f(.inputGain, 0); gateOn = b(.gateOn, true); gateThreshold = f(.gateThreshold, -42); gateRelease = f(.gateRelease, 80); gateRange = f(.gateRange, -80)
         shapeOn = b(.shapeOn, true); attack = f(.attack, 0); sustain = f(.sustain, 0)
         compOn = b(.compOn, true); compThreshold = f(.compThreshold, -18); compRatio = f(.compRatio, 4); compAttack = f(.compAttack, 5); compRelease = f(.compRelease, 80); compMakeup = f(.compMakeup, 0); compMix = f(.compMix, 100)
-        eqOn = b(.eqOn, true); lowGain = f(.lowGain, 0); midGain = f(.midGain, 0); midFreq = f(.midFreq, 500); highGain = f(.highGain, 0)
+        eqOn = b(.eqOn, true); lowGain = f(.lowGain, 0); midGain = f(.midGain, 0); midFreq = f(.midFreq, 500); presenceGain = f(.presenceGain, 0); highGain = f(.highGain, 0)
         driveOn = b(.driveOn, false); drive = f(.drive, 0); tone = f(.tone, 50)
-        roomOn = b(.roomOn, false); roomSize = f(.roomSize, 40); roomMix = f(.roomMix, 20); roomGated = b(.roomGated, false)
+        roomOn = b(.roomOn, false); roomSize = f(.roomSize, 40); roomMix = f(.roomMix, 20); roomTone = f(.roomTone, 50); roomGated = b(.roomGated, false)
         outputGain = f(.outputGain, 0); limiterOn = b(.limiterOn, true)
     }
 
@@ -250,7 +252,7 @@ struct Room {
             predelay = [Float](repeating: 0, count: Int(0.008 * sampleRate))
         }
         let size = min(max(p.roomSize / 100, 0), 1)
-        let fb: Float = 0.70 + size * 0.28, damp: Float = 0.55 - size * 0.25
+        let fb: Float = 0.70 + size * 0.28, damp: Float = 0.85 - min(max(p.roomTone / 100, 0), 1) * 0.75
         for i in combsL.indices { combsL[i].feedback = fb; combsL[i].damp1 = damp; combsL[i].damp2 = 1 - damp }
         for i in combsR.indices { combsR[i].feedback = fb; combsR[i].damp1 = damp; combsR[i].damp2 = 1 - damp }
         mix = min(max(p.roomMix / 100, 0), 1)
@@ -302,7 +304,7 @@ final class Chain {
     private var inGain = Smooth(), outGain = Smooth()
     private var hpf = Biquad()
     private var gate = Gate(), shaper = Shaper(), comp = Compressor()
-    private var low = Biquad(), mid = Biquad(), high = Biquad()
+    private var low = Biquad(), mid = Biquad(), presence = Biquad(), high = Biquad()
     private var drive = Drive(), room = Room(), limiter = Limiter()
     // Meters, written per block by the audio thread.
     private(set) var inPeak: Float = 0, outPeak: Float = 0, gateOpen = false, compGr: Float = 0, limiterGr: Float = 0
@@ -325,16 +327,17 @@ final class Chain {
         gate.prepare(p, sampleRate: sampleRate)
         shaper.prepare(p, sampleRate: sampleRate)
         comp.prepare(p, sampleRate: sampleRate)
-        let (l1, l2, h1, h2) = (low.z1, low.z2, high.z1, high.z2); let (m1, m2) = (mid.z1, mid.z2)
+        let (l1, l2, h1, h2) = (low.z1, low.z2, high.z1, high.z2); let (m1, m2, p1, p2) = (mid.z1, mid.z2, presence.z1, presence.z2)
         low = Biquad.lowShelf(90, gainDb: p.lowGain, sampleRate: sampleRate); low.z1 = l1; low.z2 = l2
         mid = Biquad.peak(min(max(p.midFreq, 40), sampleRate * 0.45), gainDb: p.midGain, q: 1.0, sampleRate: sampleRate); mid.z1 = m1; mid.z2 = m2
+        presence = Biquad.peak(3500, gainDb: p.presenceGain, q: 1.2, sampleRate: sampleRate); presence.z1 = p1; presence.z2 = p2
         high = Biquad.highShelf(6000, gainDb: p.highGain, sampleRate: sampleRate); high.z1 = h1; high.z2 = h2
         drive.prepare(p, sampleRate: sampleRate)
         room.prepare(p, sampleRate: sampleRate)
     }
 
     func reset() {
-        hpf.reset(); low.reset(); mid.reset(); high.reset(); drive.lp.reset()
+        hpf.reset(); low.reset(); mid.reset(); presence.reset(); high.reset(); drive.lp.reset()
         gate = Gate(); gate.prepare(params, sampleRate: sampleRate)
         shaper = Shaper(); shaper.prepare(params, sampleRate: sampleRate)
         comp = Compressor(); comp.prepare(params, sampleRate: sampleRate)
@@ -348,7 +351,7 @@ final class Chain {
         if p.gateOn { x = gate.process(x) }
         if p.shapeOn { x = shaper.process(x) }
         if p.compOn { x = comp.process(x) }
-        if p.eqOn { x = high.process(mid.process(low.process(hpf.process(x)))) }
+        if p.eqOn { x = high.process(presence.process(mid.process(low.process(hpf.process(x))))) }
         if p.driveOn { x = drive.process(x) }
         var l = x, r = x
         if p.roomOn {

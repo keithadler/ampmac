@@ -13,18 +13,18 @@
   code { font:15px ui-monospace,"SF Mono",Menlo,monospace; background:var(--card); padding:2px 6px; border-radius:6px; } .small { color:var(--muted); font-size:15px; }
 </style></head><body><main>
 <h1>Your kit through a drum amp.<br>On this Mac.</h1>
-<p class="lead">Plug the interface in, press the button, play. Gate, punch, squash, tone, drive and a room, in real time, with seventeen drum sounds from Motown to Nevermind. And an Ear that hears the key and the chords of whatever the Mac is playing and says where the capo goes.</p>
+<p class="lead">Plug the interface in, press the button, play. Gate, punch, squash, tone, drive and a room, in real time, with thirty-nine drum sounds in twelve genres. And an Ear, powered by chordmap, that hears the key, the tempo and the chords of whatever the Mac is playing and says where the capo goes.</p>
 <p><a class="btn" href="https://github.com/keithadler/ampmac/releases/latest">Download for macOS</a> &nbsp; <span class="small">Free. Open source. macOS 14 or later. Nothing recorded, nothing leaves the Mac.</span></p>
 <img src="screenshots/amp.png" alt="The amp: Rock Room on a Scarlett Solo, every knob in view">
 <h2>What it does</h2>
 <div class="grid">
 <div class="card"><h3>A real drum chain</h3>In order: a gate with hold, an attack and sustain shaper, a compressor with a mix knob for the parallel trick, three-band tone, drive, a stereo room that can cut with the gate, and a limiter. Every knob glides, so presets switch while you play.</div>
-<div class="card"><h3>Sounds you know by ear</h3>Levee Stairwell, In the Air, Motown, Abbey Road, Nevermind, Boom Bap, Blue Note, Tight Metal, Dead 70s, Disco, and seven plain rooms. Save your own next to them.</div>
+<div class="card"><h3>Sounds by genre</h3>Rock, Pop, Hip Hop, Jazz, Metal, Soul, Country, Punk, Blues, Reggae, Electronic and Studio: Seattle '91, Gated '81, Detroit '65, Boom Bap, Brushes, Doom, One Drop, thirty-nine in all, every one at the same loudness. Save your own next to them.</div>
 <div class="card"><h3>It tells you where the knob goes</h3>A level guide reads the raw input and says whether to turn the interface's gain up or down. Switch auto level on and it trims the rest. Every preset lands at the same loudness.</div>
-<div class="card"><h3>The Ear</h3>Play a song on the Mac. It names the chords as they go by, works out the key, and lists capo positions so the open shapes play it. Every listen is kept, with its chords, to come back to.</div>
+<div class="card"><h3>The Ear</h3>Play a song on the Mac. chordmap names the chords bar by bar, the key, the tempo and the sections, and picks the capo so the open shapes play it. Every listen is kept, with its chart and chord sheet, to come back to.</div>
 </div>
 <img src="screenshots/ear.png" alt="The Ear: Eb major, capo 3 play in C, the chords in order">
 <h2>Honest limits</h2>
-<p class="small">It is a standalone amp, not a plugin, so it will not load in Logic. The delay is your interface's, a few milliseconds. Turn direct monitor off or you hear the kit twice. The Ear hears chords the way a tuner hears pitch: well on a clear mix, less well on a wall of distortion, and it does not know the song's name. macOS asks once for the microphone (that is how it describes an interface input) and once for system audio if you use the Ear on the Mac's own sound; the app records nothing with either.</p>
+<p class="small">It is a standalone amp, not a plugin, so it will not load in Logic. The delay is your interface's, a few milliseconds. Turn direct monitor off or you hear the kit twice. The Ear hears a clear mix well and a wall of distortion less well, and it does not know the song's name. macOS asks once for the microphone (that is how it describes an interface input) and once for system audio if you use the Ear on the Mac's own sound; the app records nothing with either.</p>
 <p class="small">Also a command line: <code>ampmac render kit.wav out.wav --preset "Rock Room"</code> and <code>ampmac chords song.wav</code>. MIT licensed. One of the free Mac apps at <a href="https://keithadler.github.io">keithadler.github.io</a>.</p>
 </main></body></html>

@@ -32,7 +32,9 @@ struct PresetSidebar: View {
     var body: some View {
         VStack(spacing: 0) {
             List(selection: Binding(get: { model.presetName }, set: { if let n = $0 { model.select(named: n) } })) {
-                Section("Built in") { ForEach(Presets.builtIn) { p in Label(p.name, systemImage: icon(p.name)).tag(p.name) } }
+                ForEach(Presets.genres, id: \.self) { g in
+                    Section(g) { ForEach(Presets.inGenre(g)) { p in Label(p.name, systemImage: icon(g)).tag(p.name) } }
+                }
                 if !model.userPresets.isEmpty {
                     Section("Mine") { ForEach(model.userPresets) { p in Label(p.name, systemImage: "person").tag(p.name) } }
                 }
@@ -57,13 +59,11 @@ struct PresetSidebar: View {
         }
     }
     private func save() { model.save(as: newName); saving = false }
-    private func icon(_ name: String) -> String {
-        switch name {
-        case "Clean Kit": return "circle"; case "Tight Pop": return "bolt"; case "Rock Room": return "music.mic"; case "Garage": return "car"
-        case "Arena": return "building.columns"; case "Dry Punch": return "hand.raised"; case "Lo-fi": return "radio"
-        case "Levee Stairwell": return "stairs"; case "In the Air": return "cloud"; case "Motown": return "record.circle"; case "Abbey Road": return "figure.walk"
-        case "Nevermind": return "guitars"; case "Boom Bap": return "waveform"; case "Blue Note": return "moon.stars"; case "Tight Metal": return "bolt.horizontal"
-        case "Dead 70s": return "square.stack.3d.down.right"; case "Disco": return "sparkles"; default: return "person"
+    private func icon(_ genre: String) -> String {
+        switch genre {
+        case "Rock": return "guitars"; case "Pop": return "sparkles"; case "Hip Hop": return "waveform"; case "Jazz": return "moon.stars"; case "Metal": return "bolt.horizontal"
+        case "Soul & Funk": return "record.circle"; case "Country & Folk": return "leaf"; case "Punk & Garage": return "car"; case "Blues": return "music.quarternote.3"
+        case "Reggae": return "sun.max"; case "Electronic": return "cpu"; case "Studio": return "circle"; default: return "person"
         }
     }
 }
@@ -97,6 +97,7 @@ struct AmpPanel: View {
                         Knob("Low", value: $model.params.lowGain, range: -12...12, unit: "dB")
                         Knob("Mid", value: $model.params.midGain, range: -12...12, unit: "dB")
                         Knob("Mid at", value: $model.params.midFreq, range: 200...5000, unit: "Hz")
+                        Knob("Crack", value: $model.params.presenceGain, range: -12...12, unit: "dB")
                         Knob("High", value: $model.params.highGain, range: -12...12, unit: "dB")
                     }
                     SectionCard("Drive", on: $model.params.driveOn) {
@@ -106,6 +107,7 @@ struct AmpPanel: View {
                     SectionCard("Room", on: $model.params.roomOn) {
                         Knob("Size", value: $model.params.roomSize, range: 0...100, unit: "%")
                         Knob("Mix", value: $model.params.roomMix, range: 0...100, unit: "%")
+                        Knob("Tone", value: $model.params.roomTone, range: 0...100, unit: "%")
                         Toggle("Cut the room with the gate (the 80s sound)", isOn: $model.params.roomGated).font(.callout)
                     }
                     SectionCard("Levels", on: nil) {
