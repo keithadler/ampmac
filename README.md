@@ -4,7 +4,7 @@ A guitar amp and a drum amp for the input of your audio interface, and an Ear, p
 
 ## Download
 
-**[Download Amp-for-Mac-1.0.0.dmg](https://github.com/keithadler/ampmac/releases/latest/download/Amp-for-Mac-1.0.0.dmg)** (macOS 14 or later, Apple Silicon)
+**[Download Amp-for-Mac-1.1.0.dmg](https://github.com/keithadler/ampmac/releases/latest/download/Amp-for-Mac-1.1.0.dmg)** (macOS 14 or later, Apple Silicon)
 
 Open the DMG, drag the app to Applications, open it. The first time, macOS says the app is from an unidentified developer: right-click the app, choose Open, then Open again. That is once.
 
