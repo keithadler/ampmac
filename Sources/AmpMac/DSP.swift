@@ -43,6 +43,23 @@ struct AmpParams: Codable, Equatable {
     var outputGain: Float = 0           // dB
     var limiterOn = true
 
+    // The guitar side. Ignored entirely when the instrument is drums, and the other way about, so one
+    // preset file holds either kind and old presets keep working untouched.
+    var instrument: Instrument = .drums
+    var gain: Float = 40                // preamp dirt, 0...100
+    var bass: Float = 50                // the tone stack, all 0...100
+    var middle: Float = 50
+    var treble: Float = 50
+    var guitarPresence: Float = 50
+    var master: Float = 50              // how hard the power amp is pushed
+    var sag: Float = 30                 // how much the amp ducks and swells under a big chord
+    var bright = false                  // the bright cap: sparkle at low gain
+    var cab: Cab = .fourByTwelve
+    /// Which guitar is plugged in. Auto listens and decides; the other two settle it.
+    var input: InputKind = .auto
+    /// Where the coil sits when an acoustic is being made to behave like an electric: 0 neck, 100 bridge.
+    var pickup: Float = 50
+
     /// Older JSON without a newer knob still loads; the knob takes its default.
     init() {}
     init(from decoder: Decoder) throws {
@@ -56,6 +73,13 @@ struct AmpParams: Codable, Equatable {
         driveOn = b(.driveOn, false); drive = f(.drive, 0); tone = f(.tone, 50)
         roomOn = b(.roomOn, false); roomSize = f(.roomSize, 40); roomMix = f(.roomMix, 20); roomTone = f(.roomTone, 50); roomGated = b(.roomGated, false)
         outputGain = f(.outputGain, 0); limiterOn = b(.limiterOn, true)
+        instrument = (try? c.decodeIfPresent(Instrument.self, forKey: .instrument)) ?? .drums
+        gain = f(.gain, 40); bass = f(.bass, 50); middle = f(.middle, 50); treble = f(.treble, 50)
+        guitarPresence = f(.guitarPresence, 50); master = f(.master, 50); sag = f(.sag, 30)
+        bright = b(.bright, false)
+        cab = (try? c.decodeIfPresent(Cab.self, forKey: .cab)) ?? .fourByTwelve
+        input = (try? c.decodeIfPresent(InputKind.self, forKey: .input)) ?? .auto
+        pickup = f(.pickup, 50)
     }
 
     /// Everything off: what goes in comes out, at unity.
@@ -306,6 +330,12 @@ final class Chain {
     private var gate = Gate(), shaper = Shaper(), comp = Compressor()
     private var low = Biquad(), mid = Biquad(), presence = Biquad(), high = Biquad()
     private var drive = Drive(), room = Room(), limiter = Limiter()
+    private var preamp = Preamp(), stack = ToneStack(), power = PowerAmp(), cabinet = Cabinet()
+    private var sense = InputSense(), pickup = PickupSim()
+    /// What the input sounds like to the app, for the window to show.
+    var hearing: InputKind { sense.heard }
+    var acousticness: Float { sense.acousticness }
+    var senseRatio: Float { sense.ratio }
     // Meters, written per block by the audio thread.
     private(set) var inPeak: Float = 0, outPeak: Float = 0, gateOpen = false, compGr: Float = 0, limiterGr: Float = 0
 
@@ -334,6 +364,12 @@ final class Chain {
         high = Biquad.highShelf(6000, gainDb: p.highGain, sampleRate: sampleRate); high.z1 = h1; high.z2 = h2
         drive.prepare(p, sampleRate: sampleRate)
         room.prepare(p, sampleRate: sampleRate)
+        preamp.prepare(p, sampleRate: sampleRate)
+        stack.prepare(p, sampleRate: sampleRate)
+        power.prepare(p, sampleRate: sampleRate)
+        cabinet.prepare(p.cab, sampleRate: sampleRate)
+        pickup.prepare(p, sampleRate: sampleRate)
+        if sense.sampleRate != sampleRate { sense.prepare(sampleRate: sampleRate) }
     }
 
     func reset() {
@@ -342,12 +378,15 @@ final class Chain {
         shaper = Shaper(); shaper.prepare(params, sampleRate: sampleRate)
         comp = Compressor(); comp.prepare(params, sampleRate: sampleRate)
         room.reset(); limiter = Limiter(); limiter.prepare(sampleRate: sampleRate)
+        preamp.reset(); stack.reset(); power.reset(); cabinet.reset()
+        pickup.reset(); sense.prepare(sampleRate: sampleRate); sense.reset()
         inPeak = 0; outPeak = 0; gateOpen = false; compGr = 0; limiterGr = 0
     }
 
     @inline(__always) func processSample(_ input: Float) -> (Float, Float) {
-        var x = input * inGain.next()
         let p = params
+        if p.instrument == .guitar { return guitarSample(input) }
+        var x = input * inGain.next()
         if p.gateOn { x = gate.process(x) }
         if p.shapeOn { x = shaper.process(x) }
         if p.compOn { x = comp.process(x) }
@@ -358,6 +397,33 @@ final class Chain {
             let (wl, wr) = room.wet(x)
             let g: Float = p.roomGated && p.gateOn ? gate.gain : 1
             l += wl * g; r += wr * g
+        }
+        let g = outGain.next(); l *= g; r *= g
+        if p.limiterOn { l = limiter.process(l); r = limiter.process(r) }
+        return (l, r)
+    }
+
+    /// A guitar runs through its parts in the order an amp has them: gate at the front where the hum
+    /// is, then the preamp, the tone stack, the power amp, and only then the speaker. Putting the
+    /// cabinet last is not a detail; everything before it makes harmonics that only sound like an amp
+    /// once the speaker has taken the top off them.
+    @inline(__always) private func guitarSample(_ input: Float) -> (Float, Float) {
+        let p = params
+        sense.observe(input)
+        var x = input * inGain.next()
+        if p.gateOn { x = gate.process(x) }
+        // An acoustic is made to look like a magnetic pickup before the amp ever sees it, so every
+        // preset, knob and speaker downstream behaves exactly as it does for an electric.
+        if sense.resolve(p.input) == .acoustic { x = pickup.process(x) }
+        x = preamp.process(x)
+        x = stack.process(x)
+        x = power.process(x)
+        x = cabinet.process(x)
+        if p.compOn { x = comp.process(x) }
+        var l = x, r = x
+        if p.roomOn {
+            let (wl, wr) = room.wet(x)
+            l += wl; r += wr
         }
         let g = outGain.next(); l *= g; r *= g
         if p.limiterOn { l = limiter.process(l); r = limiter.process(r) }

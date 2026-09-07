@@ -47,6 +47,7 @@ struct AmpMacApp: App {
 
 struct MeterState: Equatable {
     var inDb: Float = -80, outDb: Float = -80, gateOpen = false, compGr: Float = 0, limiterGr: Float = 0, dropouts: UInt32 = 0
+    var hearing: InputKind = .electric
 }
 
 @MainActor
@@ -90,6 +91,10 @@ final class AmpModel: ObservableObject {
         engine.params.set(params)
     }
 
+    /// Whether the acoustic knobs are worth showing: either it was told, or it heard one.
+    var hearingAcoustic: Bool {
+        params.instrument == .guitar && (params.input == .acoustic || (params.input == .auto && meter.hearing == .acoustic))
+    }
     var inputDevice: AudioDevice? { devices.first { $0.uid == inputUID } }
     var outputDevice: AudioDevice? { devices.first { $0.uid == outputUID } }
     var latencyMs: Double {
@@ -152,6 +157,7 @@ final class AmpModel: ObservableObject {
         let inDb = gainToDb(m.inPeak), outDb = gainToDb(m.outPeak)
         s.inDb = max(inDb, s.inDb - 1.5); s.outDb = max(outDb, s.outDb - 1.5)
         s.gateOpen = m.gateOpen; s.compGr = max(m.compGr, s.compGr - 0.8); s.limiterGr = max(m.limiterGr, s.limiterGr - 0.8); s.dropouts = m.dropouts
+        s.hearing = m.hearing
         meter = s
         let raw = recent.add(inDb)
         let a = Level.advice(rawPeakDb: raw, interface: inputDevice?.name ?? "the interface")
@@ -160,6 +166,15 @@ final class AmpModel: ObservableObject {
             let g = Level.autoStep(gain: params.inputGain, rawPeakDb: raw)
             if g != params.inputGain { params.inputGain = g }
         }
+    }
+
+    /// Changing instrument is changing amp: the knobs mean different things, so it loads that bank's
+    /// first preset rather than trying to carry drum settings across.
+    func switchTo(_ instrument: Instrument) {
+        guard params.instrument != instrument else { return }
+        let wanted = instrument == .drums ? "Rock Room" : "Soho '66"
+        let bank = instrument == .drums ? Presets.drumPresets : Presets.guitarPresets
+        select(named: (bank.first { $0.name == wanted } ?? bank[0]).name)
     }
 
     // MARK: Presets

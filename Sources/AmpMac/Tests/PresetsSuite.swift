@@ -7,8 +7,12 @@ enum PresetsSuite {
         TestCase(name: "built in by genre, unique names, JSON round trip") { t in
             t.check(Presets.builtIn.count >= 36, "count: \(Presets.builtIn.count)")
             t.equal(Set(Presets.builtIn.map(\.name)).count, Presets.builtIn.count, "unique names")
-            t.check(Presets.builtIn.allSatisfy { Presets.genres.contains($0.genre) }, "every preset has a listed genre")
-            t.check(Presets.genres.allSatisfy { !Presets.inGenre($0).isEmpty }, "every genre has a preset")
+            t.check(Presets.builtIn.allSatisfy { Presets.genres(for: $0.params.instrument).contains($0.genre) }, "every preset has a listed genre")
+            for i in Instrument.allCases {
+                t.check(Presets.genres(for: i).allSatisfy { !Presets.inGenre($0, instrument: i).isEmpty }, "every \(i.rawValue) genre has a preset")
+            }
+            t.check(Presets.guitarPresets.allSatisfy { $0.params.instrument == .guitar }, "the guitar bank is guitars")
+            t.check(Presets.drumPresets.allSatisfy { $0.params.instrument == .drums }, "the drum bank is drums")
             for p in Presets.builtIn {
                 let back = Presets.params(fromJSON: Presets.json(p.params).data(using: .utf8)!)
                 t.check(back == p.params, "\(p.name) survives JSON")

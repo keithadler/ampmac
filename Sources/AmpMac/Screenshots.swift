@@ -29,6 +29,8 @@ enum Screenshots {
                 ("amp", "Rock Room", true, MeterState(inDb: -9, outDb: -4, gateOpen: true, compGr: 5.2, limiterGr: 0.6)),
                 ("garage", "Garage", true, MeterState(inDb: -14, outDb: -2, gateOpen: true, compGr: 9.8, limiterGr: 1.4)),
                 ("off", "Tight Pop", false, MeterState()),
+                ("guitar", "Camden '77", true, MeterState(inDb: -11, outDb: -3, gateOpen: true, hearing: .electric)),
+                ("acoustic", "Glass", true, MeterState(inDb: -13, outDb: -6, gateOpen: true, hearing: .acoustic)),
             ] {
                 model.select(named: preset); model.running = running; model.meter = meter; model.problem = nil
                 let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)

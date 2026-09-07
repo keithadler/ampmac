@@ -32,8 +32,8 @@ struct PresetSidebar: View {
     var body: some View {
         VStack(spacing: 0) {
             List(selection: Binding(get: { model.presetName }, set: { if let n = $0 { model.select(named: n) } })) {
-                ForEach(Presets.genres, id: \.self) { g in
-                    Section(g) { ForEach(Presets.inGenre(g)) { p in Label(p.name, systemImage: icon(g)).tag(p.name) } }
+                ForEach(Presets.genres(for: model.params.instrument), id: \.self) { g in
+                    Section(g) { ForEach(Presets.inGenre(g, instrument: model.params.instrument)) { p in Label(p.name, systemImage: icon(g)).tag(p.name) } }
                 }
                 if !model.userPresets.isEmpty {
                     Section("Mine") { ForEach(model.userPresets) { p in Label(p.name, systemImage: "person").tag(p.name) } }
@@ -63,7 +63,9 @@ struct PresetSidebar: View {
         switch genre {
         case "Rock": return "guitars"; case "Pop": return "sparkles"; case "Hip Hop": return "waveform"; case "Jazz": return "moon.stars"; case "Metal": return "bolt.horizontal"
         case "Soul & Funk": return "record.circle"; case "Country & Folk": return "leaf"; case "Punk & Garage": return "car"; case "Blues": return "music.quarternote.3"
-        case "Reggae": return "sun.max"; case "Electronic": return "cpu"; case "Studio": return "circle"; default: return "person"
+        case "Reggae": return "sun.max"; case "Electronic": return "cpu"; case "Studio": return "circle"
+        case "Clean": return "drop"; case "Crunch": return "flame"; case "Lead": return "star"; case "Country": return "leaf"; case "Indie": return "guitars"
+        default: return "person"
         }
     }
 }
@@ -77,6 +79,20 @@ struct AmpPanel: View {
                 header
                 MetersRow(meter: model.meter, running: model.running)
                 LazyVGrid(columns: columns, spacing: 14) {
+                    if model.params.instrument == .guitar { guitarCards } else { drumCards }
+                }
+                Text(model.params.instrument == .guitar
+                     ? "Turn the interface's direct-monitor knob or switch off, or you hear the dry guitar and the amp together."
+                     : "Turn the interface's direct-monitor knob or switch off, or you hear the dry kit and the amp together.")
+                    .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                if model.meter.dropouts > 0 { Text("\(model.meter.dropouts) dropouts since start. A bigger buffer in Settings fixes that.").font(.callout).foregroundStyle(.orange) }
+            }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .navigationTitle("Amp for Mac")
+    }
+
+    @ViewBuilder private var drumCards: some View {
+        Group {
                     SectionCard("Gate", on: $model.params.gateOn) {
                         Knob("Threshold", value: $model.params.gateThreshold, range: -80...0, unit: "dB")
                         Knob("Release", value: $model.params.gateRelease, range: 10...500, unit: "ms")
@@ -116,13 +132,59 @@ struct AmpPanel: View {
                         Knob("Output", value: $model.params.outputGain, range: -24...24, unit: "dB")
                         Toggle("Limiter, ceiling half a dB under full", isOn: $model.params.limiterOn).font(.callout)
                     }
-                }
-                Text("Turn the interface's direct-monitor knob or switch off, or you hear the dry kit and the amp together.")
-                    .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                if model.meter.dropouts > 0 { Text("\(model.meter.dropouts) dropouts since start. A bigger buffer in Settings fixes that.").font(.callout).foregroundStyle(.orange) }
-            }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
         }
-        .navigationTitle("Amp for Mac")
+    }
+
+    @ViewBuilder private var guitarCards: some View {
+        Group {
+            SectionCard("Guitar", on: nil) {
+                Picker("Plugged in", selection: $model.params.input) {
+                    ForEach(InputKind.allCases) { k in Text(k.title).tag(k) }
+                }.pickerStyle(.segmented)
+                if model.params.input == .auto {
+                    HStack(spacing: 6) {
+                        Image(systemName: model.meter.hearing == .acoustic ? "guitars" : "guitars.fill")
+                        Text(model.running ? "Hearing \(model.meter.hearing.title.lowercased())" : "It listens once you start playing")
+                    }.font(.callout).foregroundStyle(.secondary)
+                }
+                if model.hearingAcoustic {
+                    Knob("Pickup", value: $model.params.pickup, range: 0...100, unit: "")
+                    Text("An acoustic is made to look like a magnetic pickup before the amp sees it: the body boom, the piezo quack and the air above five kilohertz come off, and a coil's own resonance goes on. 0 is a neck pickup, 100 a bridge.")
+                        .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            SectionCard("Amp", on: nil) {
+                Knob("Gain", value: $model.params.gain, range: 0...100, unit: "")
+                Knob("Bass", value: $model.params.bass, range: 0...100, unit: "")
+                Knob("Middle", value: $model.params.middle, range: 0...100, unit: "")
+                Knob("Treble", value: $model.params.treble, range: 0...100, unit: "")
+                Knob("Presence", value: $model.params.guitarPresence, range: 0...100, unit: "")
+                Knob("Master", value: $model.params.master, range: 0...100, unit: "")
+                Knob("Sag", value: $model.params.sag, range: 0...100, unit: "")
+                Toggle("Bright: sparkle at low gain, out of the way when you turn up", isOn: $model.params.bright).font(.callout)
+            }
+            SectionCard("Speaker", on: nil) {
+                Picker("Cabinet", selection: $model.params.cab) {
+                    ForEach(Cab.allCases) { c in Text(c.title).tag(c) }
+                }.pickerStyle(.radioGroup)
+                Text("The speaker is most of what makes an amp an amp. With none, you hear the electronics on their own, which is what a direct box sounds like.")
+                    .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+            SectionCard("Gate", on: $model.params.gateOn) {
+                Knob("Threshold", value: $model.params.gateThreshold, range: -80...0, unit: "dB")
+                Knob("Release", value: $model.params.gateRelease, range: 10...500, unit: "ms")
+            }
+            SectionCard("Room", on: $model.params.roomOn) {
+                Knob("Size", value: $model.params.roomSize, range: 0...100, unit: "%")
+                Knob("Mix", value: $model.params.roomMix, range: 0...100, unit: "%")
+                Knob("Tone", value: $model.params.roomTone, range: 0...100, unit: "%")
+            }
+            SectionCard("Levels", on: nil) {
+                Knob("Input", value: $model.params.inputGain, range: -24...24, unit: "dB")
+                Knob("Output", value: $model.params.outputGain, range: -24...24, unit: "dB")
+                Toggle("Limiter, ceiling half a dB under full", isOn: $model.params.limiterOn).font(.callout)
+            }
+        }
     }
 
     private var header: some View {
@@ -135,6 +197,9 @@ struct AmpPanel: View {
                     .shadow(color: model.running ? .orange.opacity(0.6) : .clear, radius: 12)
             }.buttonStyle(.plain).help(model.running ? "Stop listening (⌘L)" : "Start listening (⌘L)").accessibilityLabel(model.running ? "Stop listening" : "Start listening")
             VStack(alignment: .leading, spacing: 6) {
+                Picker("Instrument", selection: Binding(get: { model.params.instrument }, set: { model.switchTo($0) })) {
+                    ForEach(Instrument.allCases) { i in Text(i.title).tag(i) }
+                }.pickerStyle(.segmented).frame(width: 190).labelsHidden()
                 HStack(spacing: 8) {
                     Text(model.presetName).font(.title.bold())
                     if model.edited { Text("edited").font(.caption).padding(.horizontal, 7).padding(.vertical, 2).background(.orange.opacity(0.2), in: Capsule()) }

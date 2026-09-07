@@ -73,6 +73,59 @@ enum Synth {
         return strum([48, 52, 55, 60]) + strum([43, 47, 50, 55]) + strum([45, 48, 52, 57]) + strum([41, 45, 48, 53])
     }
 
+    /// A guitar chord as a magnetic pickup hears it: harmonics that fade out by the fifth, nothing
+    /// worth speaking of above five kilohertz, and a soft attack. This is what an electric looks like
+    /// to the detector.
+    static func electric(sampleRate sr: Float = 48000, seconds: Float = 3) -> [Float] {
+        let n = Int(seconds * sr); var out = [Float](repeating: 0, count: n)
+        for m in [40, 47, 52, 56, 59, 64] {                       // an open E chord
+            let f = 440 * powf(2, Float(m - 69) / 12)
+            for h in 1...6 {
+                let hf = f * Float(h)
+                guard hf < 5000 else { break }
+                let g = 1 / powf(Float(h), 1.6)                    // a coil rolls the harmonics off fast
+                let w = 2 * Float.pi * hf / sr
+                for i in 0..<n { out[i] += sinf(w * Float(i)) * g * expf(-Float(i) / (sr * 1.6)) }
+            }
+        }
+        // The attack of a picked string, which swells rather than clicks.
+        for i in 0..<min(n, Int(sr * 0.02)) { out[i] *= Float(i) / (sr * 0.02) }
+        let peak = out.map(abs).max() ?? 1
+        return out.map { $0 / peak * 0.4 }
+    }
+
+    /// The same chord through a piezo under the saddle: a boom from the body, the hard quack around
+    /// three and a half kilohertz, air all the way up, and a pick attack that is a spike.
+    static func acoustic(sampleRate sr: Float = 48000, seconds: Float = 3) -> [Float] {
+        let n = Int(seconds * sr); var out = [Float](repeating: 0, count: n)
+        for m in [40, 47, 52, 56, 59, 64] {
+            let f = 440 * powf(2, Float(m - 69) / 12)
+            for h in 1...160 {
+                let hf = f * Float(h)
+                guard hf < sr * 0.45 else { break }
+                // Far more of the top survives, and there is a lift where the quack lives.
+                var g = 1 / powf(Float(h), 0.85)
+                if hf > 2800 && hf < 4200 { g *= 2.2 }
+                let w = 2 * Float.pi * hf / sr
+                for i in 0..<n { out[i] += sinf(w * Float(i)) * g * expf(-Float(i) / (sr * 1.4)) }
+            }
+        }
+        var noise = Noise(s: 0x51ED2701)
+        let body = 2 * Float.pi * 100 / sr
+        for i in 0..<n {
+            out[i] += sinf(body * Float(i)) * 0.5 * expf(-Float(i) / (sr * 0.5))   // the box resonating
+            if i < Int(sr * 0.004) { out[i] += noise.next() * 1.2 }                // the pick, as a spike
+        }
+        let peak = out.map(abs).max() ?? 1
+        return out.map { $0 / peak * 0.4 }
+    }
+
+    /// Flat noise, for measuring what a filter does rather than what a chord happens to contain.
+    static func noise(seconds: Float, sampleRate sr: Float = 48000, level: Float = 0.25) -> [Float] {
+        var n = Noise(s: 0x2545F491)
+        return (0..<Int(seconds * sr)).map { _ in n.next() * level }
+    }
+
     /// A single hit surrounded by silence, for transient tests.
     static func oneHit(_ hit: [Float], pad: Int) -> [Float] { [Float](repeating: 0, count: pad) + hit + [Float](repeating: 0, count: pad) }
 
@@ -87,4 +140,20 @@ enum Measure {
     static func rms(_ x: ArraySlice<Float>) -> Float { x.isEmpty ? 0 : sqrtf(x.reduce(0) { $0 + $1 * $1 } / Float(x.count)) }
     static func rms(_ x: [Float]) -> Float { rms(x[...]) }
     static func peakDb(_ x: ArraySlice<Float>) -> Float { gainToDb(peak(x)) }
+    /// How loud a signal is below a frequency, against the whole.
+    static func belowDb(_ x: [Float], _ f: Float, sampleRate: Float = 48000) -> Float {
+        var lp = Biquad.lowPass(f, q: 0.7071, sampleRate: sampleRate)
+        var lp2 = Biquad.lowPass(f, q: 0.7071, sampleRate: sampleRate)
+        let bottom = x.map { lp2.process(lp.process($0)) }
+        return gainToDb(rms(bottom) / max(rms(x), 1e-9))
+    }
+
+    /// How loud a signal is above a frequency, in dB relative to the whole. Enough to say "the speaker
+    /// took the top off" without an FFT in the test suite.
+    static func aboveDb(_ x: [Float], _ f: Float, sampleRate: Float = 48000) -> Float {
+        var hp = Biquad.highPass(f, q: 0.7071, sampleRate: sampleRate)
+        var hp2 = Biquad.highPass(f, q: 0.7071, sampleRate: sampleRate)
+        let top = x.map { hp2.process(hp.process($0)) }
+        return gainToDb(rms(top) / max(rms(x), 1e-9))
+    }
 }

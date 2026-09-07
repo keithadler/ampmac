@@ -223,10 +223,14 @@ enum CLI {
             } catch { err(error.localizedDescription); return 2 }
         case "loudness":
             // Each preset's average gain on the synthesised kit; presets are trimmed so this sits near 0 dB.
-            let kit = Synth.kit(seconds: 4, sampleRate: 48000); let inRms = Measure.rms(kit)
+            // A drum preset is measured on a kit and a guitar preset on chords: an amp told how loud
+            // it is on a snare has been told nothing.
+            let kit = Synth.kit(seconds: 4, sampleRate: 48000)
+            let chords = Synth.chords(sampleRate: 48000)
             for p in Presets.builtIn {
-                let (l, r) = Chain(sampleRate: 48000, params: p.params).render(kit)
-                let g = gainToDb((Measure.rms(l) + Measure.rms(r)) / 2 / inRms)
+                let source = p.params.instrument == .guitar ? chords : kit
+                let (l, r) = Chain(sampleRate: 48000, params: p.params).render(source)
+                let g = gainToDb((Measure.rms(l) + Measure.rms(r)) / 2 / Measure.rms(source))
                 out(String(format: "%-16@ %+5.1f dB  (output knob %+.0f)", p.name, g, p.params.outputGain))
             }
             return 0

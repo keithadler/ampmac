@@ -14,7 +14,10 @@ struct Preset: Codable, Equatable, Identifiable {
 }
 
 enum Presets {
-    static let genres = ["Rock", "Pop", "Hip Hop", "Jazz", "Metal", "Soul & Funk", "Country & Folk", "Punk & Garage", "Blues", "Reggae", "Electronic", "Studio"]
+    static let drumGenres = ["Rock", "Pop", "Hip Hop", "Jazz", "Metal", "Soul & Funk", "Country & Folk", "Punk & Garage", "Blues", "Reggae", "Electronic", "Studio"]
+    static let guitarGenres = ["Clean", "Crunch", "Lead", "Metal", "Blues", "Country", "Indie"]
+    static let genres = drumGenres
+    static func genres(for instrument: Instrument) -> [String] { instrument == .drums ? drumGenres : guitarGenres }
 
     /// One line per preset. The output trim at the end keeps every preset at the loudness of what went in
     /// (`ampmac loudness` prints the table; a test holds it within 1.5 dB).
@@ -31,7 +34,61 @@ enum Presets {
         return Preset(name: name, params: p, builtIn: true, genre: genre)
     }
 
-    static let builtIn: [Preset] = [
+    /// A guitar preset. Fewer numbers than a drum one, because an amp has fewer controls: how much
+    /// dirt, the three tone knobs, presence, how hard the power amp is pushed, and which speaker.
+    private static func guitar(_ name: String, _ genre: String, gain: Float, tone: (Float, Float, Float),
+                               presence: Float = 50, master: Float = 50, cab: Cab = .fourByTwelve,
+                               sag: Float = 30, bright: Bool = false, gate: Float? = nil,
+                               room: (Float, Float, Float)? = nil, trim: Float = 0) -> Preset {
+        var p = AmpParams()
+        p.instrument = .guitar
+        p.gain = gain
+        p.bass = tone.0; p.middle = tone.1; p.treble = tone.2
+        p.guitarPresence = presence; p.master = master; p.cab = cab; p.sag = sag; p.bright = bright
+        p.shapeOn = false; p.eqOn = false; p.driveOn = false; p.compOn = false
+        if let g = gate { p.gateOn = true; p.gateThreshold = g; p.gateRelease = 60 } else { p.gateOn = false }
+        if let r = room { p.roomOn = true; p.roomSize = r.0; p.roomMix = r.1; p.roomTone = r.2 }
+        p.outputGain = trim
+        return Preset(name: name, params: p, builtIn: true, genre: genre)
+    }
+
+    /// Twenty-four amps. Named for the room, the town and the year, the way the drum presets are, so
+    /// that nothing here is anybody's trademark.
+    static let guitarPresets: [Preset] = [
+        // Clean
+        guitar("Glass", "Clean", gain: 12, tone: (55, 45, 65), presence: 60, master: 35, cab: .twoByTwelve, bright: true, room: (45, 18, 60), trim: -5.5),
+        guitar("Surf '63", "Clean", gain: 18, tone: (60, 40, 70), presence: 65, master: 45, cab: .oneByTwelve, bright: true, room: (75, 30, 65), trim: -6.5),
+        guitar("Pedal Platform", "Clean", gain: 8, tone: (50, 55, 50), presence: 45, master: 30, cab: .fourByTwelve, sag: 15, trim: -5),
+        guitar("Front Room", "Clean", gain: 20, tone: (45, 60, 55), presence: 40, master: 55, cab: .oneByEight, sag: 45, room: (30, 14, 45), trim: -4.5),
+        // Crunch
+        guitar("Soho '66", "Crunch", gain: 45, tone: (50, 60, 55), presence: 55, master: 65, cab: .twoByTwelve, sag: 45, room: (35, 12, 55), trim: -7.5),
+        guitar("Camden '77", "Crunch", gain: 52, tone: (45, 55, 65), presence: 60, master: 70, cab: .fourByTwelve, sag: 35, trim: -10.5),
+        guitar("Detroit '69", "Crunch", gain: 48, tone: (60, 65, 45), presence: 45, master: 60, cab: .fourByTwelve, sag: 55, trim: -10),
+        guitar("Backline", "Crunch", gain: 58, tone: (40, 50, 70), presence: 65, master: 75, cab: .oneByTwelve, sag: 40, trim: -10.5),
+        // Lead
+        guitar("Singing", "Lead", gain: 68, tone: (45, 65, 55), presence: 60, master: 60, cab: .fourByTwelve, sag: 50, gate: -52, room: (55, 20, 55), trim: -11),
+        guitar("Hollywood '84", "Lead", gain: 72, tone: (40, 55, 65), presence: 70, master: 65, cab: .fourByTwelve, sag: 45, gate: -50, room: (70, 24, 60), trim: -11.5),
+        guitar("Stadium", "Lead", gain: 65, tone: (50, 60, 60), presence: 65, master: 70, cab: .fourByTwelve, sag: 40, gate: -52, room: (85, 28, 55), trim: -11.5),
+        guitar("Violin", "Lead", gain: 75, tone: (35, 70, 45), presence: 50, master: 55, cab: .twoByTwelve, sag: 60, gate: -48, room: (60, 22, 45), trim: -11),
+        // Metal
+        guitar("Bay Area '88", "Metal", gain: 82, tone: (55, 35, 70), presence: 70, master: 75, cab: .fourByTwelve, sag: 20, gate: -46, trim: -10),
+        guitar("Tight Chug", "Metal", gain: 85, tone: (50, 40, 65), presence: 65, master: 70, cab: .fourByTwelve, sag: 15, gate: -44, trim: -10),
+        guitar("Doom Wall", "Metal", gain: 78, tone: (70, 45, 45), presence: 45, master: 80, cab: .fourByTwelve, sag: 55, gate: -50, room: (80, 18, 40), trim: -9.5),
+        guitar("Modern", "Metal", gain: 88, tone: (45, 30, 75), presence: 75, master: 72, cab: .fourByTwelve, sag: 10, gate: -42, trim: -10),
+        // Blues
+        guitar("Delta Juke", "Blues", gain: 40, tone: (55, 65, 45), presence: 45, master: 70, cab: .oneByTwelve, sag: 65, room: (40, 16, 45), trim: -6.5),
+        guitar("South Side", "Blues", gain: 35, tone: (60, 70, 40), presence: 40, master: 65, cab: .twoByTwelve, sag: 70, room: (50, 20, 40), trim: -6.5),
+        guitar("Slow Burn", "Blues", gain: 55, tone: (50, 70, 50), presence: 50, master: 60, cab: .twoByTwelve, sag: 60, room: (60, 22, 50), trim: -10.5),
+        // Country
+        guitar("Chicken Pick", "Country", gain: 22, tone: (45, 50, 75), presence: 70, master: 50, cab: .oneByTwelve, sag: 35, bright: true, room: (55, 22, 65), trim: -5.5),
+        guitar("Bakersfield '65", "Country", gain: 28, tone: (50, 45, 70), presence: 65, master: 55, cab: .twoByTwelve, sag: 40, bright: true, room: (65, 26, 60), trim: -7),
+        // Indie
+        guitar("Jangle", "Indie", gain: 16, tone: (40, 50, 72), presence: 60, master: 40, cab: .oneByTwelve, bright: true, room: (50, 20, 65), trim: -5),
+        guitar("Post Punk '81", "Indie", gain: 38, tone: (35, 60, 68), presence: 60, master: 60, cab: .twoByTwelve, sag: 30, room: (70, 26, 60), trim: -7.5),
+        guitar("Wash", "Indie", gain: 30, tone: (45, 40, 70), presence: 55, master: 45, cab: .twoByTwelve, sag: 35, room: (95, 45, 70), trim: -9.5),
+    ]
+
+    static let drumPresets: [Preset] = [
         // Rock
         make("Rock Room", "Rock", gate: (-42, 80), shape: (25, 10), comp: (-20, 4, 15, 120, 5, 70), eq: (4, -3, 350, 2, 2), drive: (25, 60), room: (45, 25, 55, false), trim: -5),
         make("Arena", "Rock", gate: (-40, 100), shape: (40, 20), comp: (-18, 3, 20, 200, 4, 60), eq: (5, -4, 500, 3, 4), drive: (15, 65), room: (85, 35, 60, false), trim: -6),
@@ -85,7 +142,12 @@ enum Presets {
         make("Dead 70s", "Studio", gate: (-45, 100), shape: (0, -60), comp: (-20, 4, 10, 100, 4, 90), eq: (3, 2, 500, -2, -5), drive: (30, 30), room: nil, trim: -1.5),
     ]
 
-    static func inGenre(_ g: String) -> [Preset] { builtIn.filter { $0.genre == g } }
+    /// Both banks. Two genres are named the same on each side, so anything that lists presets has to
+    /// say which instrument it means.
+    static let builtIn: [Preset] = drumPresets + guitarPresets
+    static func inGenre(_ g: String, instrument: Instrument = .drums) -> [Preset] {
+        builtIn.filter { $0.genre == g && $0.params.instrument == instrument }
+    }
 
     /// Built-in first, then the user's, by name. A user preset with a built-in name is not allowed.
     static func all(user: [Preset] = Prefs.userPresets) -> [Preset] { builtIn + user.filter { u in !builtIn.contains { $0.name == u.name } }.map { var p = $0; p.builtIn = false; p.genre = "Mine"; return p } }

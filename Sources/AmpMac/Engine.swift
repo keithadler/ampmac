@@ -25,8 +25,9 @@ final class ParamBox: @unchecked Sendable {
 /// Meters the audio thread writes and the window reads thirty times a second.
 final class Meters: @unchecked Sendable {
     var inPeak: Float = 0, outPeak: Float = 0, gateOpen = false, compGr: Float = 0, limiterGr: Float = 0
+    var hearing: InputKind = .electric
     var frames: UInt64 = 0, dropouts: UInt32 = 0
-    func reset() { inPeak = 0; outPeak = 0; gateOpen = false; compGr = 0; limiterGr = 0; frames = 0; dropouts = 0 }
+    func reset() { inPeak = 0; outPeak = 0; gateOpen = false; compGr = 0; limiterGr = 0; frames = 0; dropouts = 0; hearing = .electric }
 }
 
 struct EngineError: LocalizedError { let message: String; var errorDescription: String? { message } }
@@ -73,6 +74,7 @@ final class Engine: @unchecked Sendable {
         }
         meters.inPeak = chain.inPeak; meters.outPeak = chain.outPeak; meters.gateOpen = chain.gateOpen
         meters.compGr = chain.compGr; meters.limiterGr = chain.limiterGr; meters.frames &+= UInt64(n)
+        meters.hearing = chain.hearing
         return noErr
     }
 
