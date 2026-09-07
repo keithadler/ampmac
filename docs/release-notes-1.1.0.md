@@ -19,3 +19,5 @@ When it hears an acoustic, it makes it look like a magnetic pickup before the am
 ## Everything else
 
 The drum amp is unchanged, and a preset saved in 1.0.0 still loads exactly as it did. Nothing leaves the Mac, nothing is recorded, and the app is still MIT licensed and free.
+
+SHA-256 of the DMG: `804024f1e1411155ccacd5c7c4b94411a530f7f73c8e9bb8748eceb44bbe43ce`
