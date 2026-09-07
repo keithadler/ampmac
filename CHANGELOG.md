@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.0, 2026-09-07
 
 - Pedals: a two-slot board under the amp, pedal 1 in front and pedal 2
   after. Screamer, Fuzz, Squeeze, Chorus, Echo, Tremolo. Every built-in
