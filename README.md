@@ -4,7 +4,7 @@ A drum amp for the input of your audio interface, and an Ear, powered by [chordm
 
 ## Download
 
-**[Download Amp-for-Mac-1.0.0.dmg](https://github.com/keithadler/ampmac/releases/latest/download/Amp-for-Mac-1.0.0.dmg)** (macOS 14 or later, Apple Silicon and Intel)
+**[Download Amp-for-Mac-1.0.0.dmg](https://github.com/keithadler/ampmac/releases/latest/download/Amp-for-Mac-1.0.0.dmg)** (macOS 14 or later, Apple Silicon)
 
 Open the DMG, drag the app to Applications, open it. The first time, macOS says the app is from an unidentified developer: right-click the app, choose Open, then Open again. That is once.
 
@@ -40,6 +40,7 @@ chordmap hears a clear mix well and a wall of distortion less well, flags sparse
 - The limiter keeps the output under full scale; it cannot un-clip an input that arrived clipped.
 - A microphone in the same room as the monitors will feed back through any amp with gain in it. Headphones, or monitors kept low and away from the kit, are the fix; the app keeps its presets at unity to help.
 - The Ear has no idea what song is playing, only what key and chords it hears.
+- Apple Silicon only for now. The Intel build needs the Rust toolchain's Intel target on the build machine; it follows.
 
 ## Command line
 
