@@ -18,6 +18,21 @@ enum PresetsSuite {
                 t.check(back == p.params, "\(p.name) survives JSON")
             }
         },
+        TestCase(name: "what is plugged in survives a preset change and a relaunch") { t in
+            var mine = AmpParams(); mine.instrument = .guitar; mine.input = .acoustic; mine.pickup = 80
+            let other = Presets.guitarPresets[1].params
+            let after = other.carryingPluggedIn(from: mine)
+            t.equal(after.input, .acoustic, "input carried")
+            t.equal(after.pickup, 80, "pickup carried")
+            t.check(after.sound == other.sound, "the sound is the new preset's")
+            var same = other; same.input = .electric; same.pickup = 10
+            t.check(same.sound == other.sound, "plugging in a different guitar is not an edit")
+            Prefs.pluggedIn = .acoustic; Prefs.pickup = 80
+            t.equal(Prefs.pluggedIn, .acoustic, "plugged in kept")
+            t.equal(Prefs.pickup, 80, "pickup kept")
+            Prefs.pluggedIn = nil; Prefs.pickup = nil
+            t.check(Prefs.pluggedIn == nil && Prefs.pickup == nil, "cleared")
+        },
         TestCase(name: "named finds exact, case-insensitive, prefix") { t in
             t.equal(Presets.named("Rock Room", user: [])?.name, "Rock Room", "exact")
             t.equal(Presets.named("rock room", user: [])?.name, "Rock Room", "case")

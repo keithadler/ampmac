@@ -36,6 +36,18 @@
 </table>
 <p>The meters show input, output, whether the gate is open, and how much the compressor and the limiter are taking off.</p>
 
+<h2 id="pedals">Pedals</h2>
+<p>Two stomp boxes sit under the amp. Pedal 1 is in front of the amp, where a drive or a compressor goes; pedal 2 is after it, where a chorus, an echo or a tremolo goes. Any pedal fits either slot; the slot decides where it is heard.</p>
+<p>Every preset comes with the two pedals a player of that sound would most likely have on the floor, switched the way they would most likely leave them: a lead sound has its boost and echo on, a clean sound has the compressor on and a chorus ready, a country sound has the compressor and a slapback, a hip hop kit has a crush. Stomp them with <b>⌘⌥1</b> and <b>⌘⌥2</b> without looking, or click the switch. Change the kind with the menu; the knobs reset to that pedal's defaults.</p>
+<ul>
+<li><b>Screamer</b>: the green overdrive, a mid hump and soft clipping. Low drive and high level is the classic tight boost into a hot amp.</li>
+<li><b>Fuzz</b>: hard clipping and a lot of it. On a drum kit it is a crush.</li>
+<li><b>Squeeze</b>: a compressor for sustain and even picking.</li>
+<li><b>Chorus</b>: a second, slightly out-of-tune copy of the sound, for width.</li>
+<li><b>Echo</b>: a tape-style echo that darkens with every repeat. About 110 ms with one repeat is a slapback.</li>
+<li><b>Tremolo</b>: the volume rises and falls.</li>
+</ul>
+<p>Pedals are part of the preset: save a preset and its board is saved with it. The guitar you plugged in and its pickup are not; those stay with you across presets and launches.</p>
 <h2 id="presets">Presets</h2>
 <p>Thirty-nine built in, in twelve genres, named for the room, the town and the year rather than anyone's trademark. Each is trimmed to land at the loudness of what went in, so switching never jumps the volume.</p>
 <table>
@@ -59,6 +71,9 @@
 <h2 id="level">Level guide</h2>
 <p>While the amp runs, a line under the status reads the raw input and says what to do with the gain knob on the interface: clipping means turn it down, quiet means turn it up, good means leave it. Auto level, off until you switch it on in the Levels card, then trims the amp's own input gain a quarter dB at a time, up to 12 dB, so hits land near -14 dB. Every preset carries an output trim so all of them land at the same loudness as what went in. Clipping at the interface is the knob's job; no setting in the app can undo it.</p>
 
+<h2 id="latency">Latency, and playing into Suno or another app</h2>
+<p>The Latency menu under the devices sets how many frames the interface buffers: 32 is the fastest a device will go, 256 the safest. The number beside it is the round trip from string to speaker, measured from what the devices report. Fewer frames means less delay and more chance of a crackle on a busy Mac; if you hear crackles, go one step safer.</p>
+<p>To play the amp into Suno, or record it in any other app, route the output through a virtual audio device such as <a href="https://existential.audio/blackhole/">BlackHole</a> (free, open source): install it, pick it as Amp's <b>Output</b>, then choose it as the microphone in the browser or app that is recording. Pick <b>Fast</b> or <b>Fastest</b> latency so what you play lands where you meant it. To hear yourself at the same time, make a Multi-Output Device in Audio MIDI Setup that includes both BlackHole and your interface, and pick that as the output instead. Amp itself still records nothing; the other app hears what the speaker would.</p>
 <h2 id="ear">The Ear</h2>
 <p>Switch to Ear at the top of the window (or ⌘E). Press the ear and play a song on the Mac. The Ear is <a href="https://github.com/keithadler/chordmap">chordmap</a>, an open-source engine for tempo, key, chords, sections and the capo, linked into the app. Every two seconds it re-hears the last 24 seconds and shows the chord now, the key with its runner-up when it is unsure, the tempo and meter, and the bars of that stretch grouped by section. When you stop, the whole listen is charted and chordmap's chord sheet appears with a Copy button.</p>
 <p>The source menu offers the Mac's own sound (macOS 14.2 or later; macOS asks once for system audio recording) and every input device. A guitar into the interface works as well as a song. The Ear leaves the amp's own output out of what it hears, so the two can run together.</p>

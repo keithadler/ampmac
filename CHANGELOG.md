@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- Pedals: a two-slot board under the amp, pedal 1 in front and pedal 2
+  after. Screamer, Fuzz, Squeeze, Chorus, Echo, Tremolo. Every built-in
+  preset ships with the two its sound calls for, switched the way a player
+  would leave them, and still lands at unity. ⌘⌥1 and ⌘⌥2 stomp them.
+- Latency menu, Fastest to Safe, with the measured round trip beside it,
+  and a Help section on playing into Suno or any other app through a
+  virtual output device.
+- The guitar you plugged in, and its pickup position, stay put: they survive
+  a preset change, a revert and a relaunch, and are not counted as an edit.
+  A saved preset is a sound and no longer carries them.
+
 ## 1.1.0, 2026-09-07
 
 A guitar amp, and an acoustic that can be played as an electric.

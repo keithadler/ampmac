@@ -126,6 +126,7 @@ struct AmpPanel: View {
                         Knob("Tone", value: $model.params.roomTone, range: 0...100, unit: "%")
                         Toggle("Cut the room with the gate (the 80s sound)", isOn: $model.params.roomGated).font(.callout)
                     }
+                    pedalsCard
                     SectionCard("Levels", on: nil) {
                         Knob("Input", value: $model.params.inputGain, range: -24...24, unit: "dB")
                         Toggle("Auto level: keep hits near \(Int(Level.target)) dB", isOn: $model.autoLevel).font(.callout)
@@ -179,11 +180,23 @@ struct AmpPanel: View {
                 Knob("Mix", value: $model.params.roomMix, range: 0...100, unit: "%")
                 Knob("Tone", value: $model.params.roomTone, range: 0...100, unit: "%")
             }
+            pedalsCard
             SectionCard("Levels", on: nil) {
                 Knob("Input", value: $model.params.inputGain, range: -24...24, unit: "dB")
                 Knob("Output", value: $model.params.outputGain, range: -24...24, unit: "dB")
                 Toggle("Limiter, ceiling half a dB under full", isOn: $model.params.limiterOn).font(.callout)
             }
+        }
+    }
+
+    private var pedalsCard: some View {
+        SectionCard("Pedals", on: nil) {
+            HStack(alignment: .top, spacing: 14) {
+                StompBox(number: 1, slot: $model.params.pedal1)
+                StompBox(number: 2, slot: $model.params.pedal2)
+            }
+            Text("Pedal 1 is in front of the amp, pedal 2 after it. ⌘⌥1 and ⌘⌥2 stomp them without looking.")
+                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -220,6 +233,12 @@ struct AmpPanel: View {
                     Picker("Channel", selection: $model.inputChannel) { ForEach(0..<d.inputs, id: \.self) { i in Text(d.channelLabel(i)).tag(i) } }
                 }
                 Picker("Output", selection: $model.outputUID) { ForEach(model.devices.filter { $0.outputs > 0 }) { d in Text(d.name).tag(d.uid as String?) } }
+                HStack(spacing: 8) {
+                    Picker("Latency", selection: $model.bufferFrames) {
+                        Text("Fastest, 32").tag(32); Text("Fast, 64").tag(64); Text("Normal, 128").tag(128); Text("Safe, 256").tag(256)
+                    }
+                    Text(String(format: "%.0f ms round trip", model.latencyMs)).font(.caption).foregroundStyle(.secondary).fixedSize()
+                }.help("Fewer frames is less delay between the string and the speaker, at the cost of crackles on a busy Mac. For playing into Suno or another app, pick Fast and route the output through a virtual device; see Help.")
             }.frame(width: 340).labelsHidden().controlSize(.small)
         }
     }
@@ -308,5 +327,32 @@ struct Knob: View {
             Slider(value: $value, in: range).controlSize(.small)
             Text(String(format: "%.\(digits)f %@", value, unit)).font(.callout.monospacedDigit()).foregroundStyle(.secondary).frame(width: 70, alignment: .trailing)
         }.accessibilityElement(children: .combine).accessibilityLabel(label)
+    }
+}
+
+
+/// One pedal on the board: a stomp switch with its light, the kind, and three knobs.
+struct StompBox: View {
+    let number: Int
+    @Binding var slot: PedalSlot
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                Button { slot.on.toggle() } label: {
+                    HStack(spacing: 8) {
+                        Circle().fill(slot.on && slot.kind != .none ? Color.red : Color.secondary.opacity(0.25)).frame(width: 12, height: 12)
+                            .shadow(color: slot.on && slot.kind != .none ? .red.opacity(0.7) : .clear, radius: 6)
+                        Text(slot.on ? "On" : "Off").font(.callout.bold()).frame(width: 26)
+                    }.padding(.horizontal, 10).padding(.vertical, 6).background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+                }.buttonStyle(.plain).disabled(slot.kind == .none).help("Stomp (⌘⌥\(number))").accessibilityLabel("Pedal \(number) \(slot.on ? "on" : "off")")
+                Picker("Pedal \(number)", selection: Binding(get: { slot.kind }, set: { k in slot = PedalSlot.fresh(k); slot.on = k != .none && slot.on })) {
+                    ForEach(PedalKind.allCases) { k in Text(k.title).tag(k) }
+                }.labelsHidden().frame(width: 120)
+            }
+            Text(slot.kind.blurb).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            ForEach(Array(slot.kind.knobs.enumerated()), id: \.offset) { i, k in
+                Knob(k.0, value: i == 0 ? $slot.a : i == 1 ? $slot.b : $slot.c, range: k.1, unit: k.2)
+            }
+        }.frame(maxWidth: .infinity, alignment: .leading).opacity(slot.on || slot.kind == .none ? 1 : 0.7)
     }
 }

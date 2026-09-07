@@ -61,6 +61,14 @@ Every listen is kept, with the whole chart, in the sidebar. Retitle it, reopen i
 
 chordmap hears a clear mix well and a wall of distortion less well, flags sparse harmony instead of inventing chords, and does not know a song's name. Hearing the Mac's own sound needs macOS 14.2 or later.
 
+## Pedals
+
+Two stomp boxes under the amp: pedal 1 in front of it, pedal 2 after it. Screamer, Fuzz, Squeeze, Chorus, Echo and Tremolo, three knobs each. Every preset ships with the two a player of that sound would most likely have on the floor, switched the way they would leave them; a lead sound has its boost and echo on, a clean sound the compressor on and a chorus ready, a hip hop kit a crush. ⌘⌥1 and ⌘⌥2 stomp them without looking. Pedals are saved with a preset; the guitar you plugged in and its pickup position are yours and survive preset changes and relaunches.
+
+## Latency, and playing into Suno
+
+The Latency menu under the devices runs from Fastest (32 frames) to Safe (256), with the measured round trip beside it. To play into Suno or record in another app, set Amp's output to a virtual device such as BlackHole, pick that as the microphone in the other app, and choose Fast. Amp still records nothing.
+
 ## Honest limits
 
 - It is a standalone amp, not a plugin. It will not load in Logic or Live.

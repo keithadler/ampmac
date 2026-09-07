@@ -22,6 +22,9 @@ struct AmpMacApp: App {
                 Button(model.running ? "Stop the Amp" : "Start the Amp") { model.toggle() }.keyboardShortcut("l", modifiers: .command)
                 Button(EarModel.shared.listening ? "Stop the Ear" : "Start the Ear") { model.mode = .ear; EarModel.shared.toggle() }.keyboardShortcut("e", modifiers: .command)
                 Divider()
+                Button("\(model.params.pedal1.on ? "Lift" : "Stomp") pedal 1: \(model.params.pedal1.title)") { model.params.pedal1.on.toggle() }.keyboardShortcut("1", modifiers: [.command, .option]).disabled(model.params.pedal1.kind == .none)
+                Button("\(model.params.pedal2.on ? "Lift" : "Stomp") pedal 2: \(model.params.pedal2.title)") { model.params.pedal2.on.toggle() }.keyboardShortcut("2", modifiers: [.command, .option]).disabled(model.params.pedal2.kind == .none)
+                Divider()
                 ForEach(Array(Presets.builtIn.prefix(9).enumerated()), id: \.offset) { i, p in
                     Button(p.name) { model.select(named: p.name) }.keyboardShortcut(KeyEquivalent(Character("\(i + 1)")), modifiers: .command)
                 }
@@ -54,13 +57,15 @@ struct MeterState: Equatable {
 final class AmpModel: ObservableObject {
     static let shared = AmpModel()
     let engine = Engine.shared
-    @Published var params: AmpParams { didSet { guard !loading else { return }; engine.params.set(params); Prefs.params = params; edited = differs(params, base) } }
+    @Published var params: AmpParams { didSet { guard !loading else { return }; engine.params.set(params); Prefs.params = params; Prefs.pluggedIn = params.input; Prefs.pickup = params.pickup; edited = differs(params, base) } }
     @Published var mode: Mode = Mode(rawValue: Prefs.defaults.string(forKey: "mode") ?? "") ?? .amp { didSet { Prefs.defaults.set(mode.rawValue, forKey: "mode") } }
     @Published var autoLevel = Prefs.autoLevel { didSet { Prefs.autoLevel = autoLevel } }
+    /// Frames per buffer: 32 is the fastest a device will go, 256 the safest. Round trip shows in the window.
+    @Published var bufferFrames = Prefs.bufferFrames { didSet { guard !loading else { return }; Prefs.bufferFrames = bufferFrames; restartIfRunning() } }
     @Published var advice: Level.Advice?
     private var recent = Level.Recent()
-    /// With auto level on, the input gain is the amp's business, not an edit.
-    private func differs(_ a: AmpParams, _ b: AmpParams) -> Bool { var x = a, y = b; if autoLevel { x.inputGain = 0; y.inputGain = 0 }; return x != y }
+    /// With auto level on, the input gain is the amp's business, not an edit; what is plugged in never is.
+    private func differs(_ a: AmpParams, _ b: AmpParams) -> Bool { var x = a.sound, y = b.sound; if autoLevel { x.inputGain = 0; y.inputGain = 0 }; return x != y }
     @Published var presetName: String { didSet { Prefs.presetName = presetName } }
     @Published var edited = false
     @Published var devices: [AudioDevice] = []
@@ -84,6 +89,9 @@ final class AmpModel: ObservableObject {
         let preset = Presets.named(name) ?? Presets.builtIn[2]
         presetName = preset.name; base = preset.params
         params = Prefs.params ?? preset.params
+        // The guitar that was plugged in last time is still plugged in.
+        if let i = Prefs.pluggedIn { params.input = i }
+        if let p = Prefs.pickup { params.pickup = p }
         edited = differs(params, base)
         inputUID = Prefs.inputUID; outputUID = Prefs.outputUID; inputChannel = Prefs.inputChannel ?? 0
         loading = false
@@ -180,19 +188,20 @@ final class AmpModel: ObservableObject {
     // MARK: Presets
     func select(named name: String) {
         guard let p = Presets.named(name, user: userPresets) else { return }
-        presetName = p.name; base = p.params; params = p.params; edited = false
+        presetName = p.name; base = p.params; params = p.params.carryingPluggedIn(from: params); edited = false
     }
     func save(as name: String) {
         let n = name.trimmingCharacters(in: .whitespaces); guard !n.isEmpty, !Presets.builtIn.contains(where: { $0.name == n }) else { return }
-        var list = userPresets.filter { $0.name != n }; list.append(Preset(name: n, params: params)); list.sort { $0.name < $1.name }
+        // A saved preset is a sound; the guitar plugged in at the time is not part of it.
+        var list = userPresets.filter { $0.name != n }; list.append(Preset(name: n, params: params.sound)); list.sort { $0.name < $1.name }
         userPresets = list; Prefs.userPresets = list
-        presetName = n; base = params; edited = false
+        presetName = n; base = params.sound; edited = false
     }
     func delete(named name: String) {
         userPresets.removeAll { $0.name == name }; Prefs.userPresets = userPresets
         if presetName == name { select(named: "Rock Room") }
     }
-    func revert() { params = base; edited = false }
+    func revert() { params = base.carryingPluggedIn(from: params); edited = false }
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {

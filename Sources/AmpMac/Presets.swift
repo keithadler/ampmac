@@ -144,7 +144,12 @@ enum Presets {
 
     /// Both banks. Two genres are named the same on each side, so anything that lists presets has to
     /// say which instrument it means.
-    static let builtIn: [Preset] = drumPresets + guitarPresets
+    /// Every built-in preset gets the two pedals its sound calls for.
+    static let builtIn: [Preset] = (drumPresets + guitarPresets).map { preset in
+        var p = preset
+        (p.params.pedal1, p.params.pedal2) = defaultPedals(genre: p.genre, instrument: p.params.instrument, name: p.name)
+        return p
+    }
     static func inGenre(_ g: String, instrument: Instrument = .drums) -> [Preset] {
         builtIn.filter { $0.genre == g && $0.params.instrument == instrument }
     }
@@ -181,6 +186,16 @@ enum Prefs {
         set { defaults.set(newValue.flatMap { try? Presets.encoder.encode($0) }, forKey: "params") }
     }
     static var presetName: String? { get { defaults.string(forKey: "presetName") } set { defaults.set(newValue, forKey: "presetName") } }
+    /// What is plugged in and where its pickup sits, kept apart from the preset so a preset change
+    /// or a relaunch never loses them.
+    static var pluggedIn: InputKind? {
+        get { defaults.string(forKey: "pluggedIn").flatMap(InputKind.init(rawValue:)) }
+        set { defaults.set(newValue?.rawValue, forKey: "pluggedIn") }
+    }
+    static var pickup: Float? {
+        get { defaults.object(forKey: "pickup") == nil ? nil : defaults.float(forKey: "pickup") }
+        set { if let v = newValue { defaults.set(v, forKey: "pickup") } else { defaults.removeObject(forKey: "pickup") } }
+    }
     static var userPresets: [Preset] {
         get { defaults.data(forKey: "userPresets").flatMap { try? JSONDecoder().decode([Preset].self, from: $0) } ?? [] }
         set { defaults.set(try? Presets.encoder.encode(newValue), forKey: "userPresets") }

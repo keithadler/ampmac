@@ -59,6 +59,17 @@ struct AmpParams: Codable, Equatable {
     var input: InputKind = .auto
     /// Where the coil sits when an acoustic is being made to behave like an electric: 0 neck, 100 bridge.
     var pickup: Float = 50
+    /// The pedal board: slot 1 in front of the amp, slot 2 after it.
+    var pedal1 = PedalSlot()
+    var pedal2 = PedalSlot()
+
+    /// What is plugged in belongs to the player, not the preset: a preset is a sound, and the guitar
+    /// stays the same guitar when the sound changes. Carries `input` and `pickup` over from `other`.
+    func carryingPluggedIn(from other: AmpParams) -> AmpParams {
+        var p = self; p.input = other.input; p.pickup = other.pickup; return p
+    }
+    /// The same params with what is plugged in set to the defaults, for comparing sounds.
+    var sound: AmpParams { var p = self; p.input = .auto; p.pickup = 50; return p }
 
     /// Older JSON without a newer knob still loads; the knob takes its default.
     init() {}
@@ -78,6 +89,8 @@ struct AmpParams: Codable, Equatable {
         guitarPresence = f(.guitarPresence, 50); master = f(.master, 50); sag = f(.sag, 30)
         bright = b(.bright, false)
         cab = (try? c.decodeIfPresent(Cab.self, forKey: .cab)) ?? .fourByTwelve
+        pedal1 = (try? c.decodeIfPresent(PedalSlot.self, forKey: .pedal1)) ?? PedalSlot()
+        pedal2 = (try? c.decodeIfPresent(PedalSlot.self, forKey: .pedal2)) ?? PedalSlot()
         input = (try? c.decodeIfPresent(InputKind.self, forKey: .input)) ?? .auto
         pickup = f(.pickup, 50)
     }
@@ -332,6 +345,7 @@ final class Chain {
     private var drive = Drive(), room = Room(), limiter = Limiter()
     private var preamp = Preamp(), stack = ToneStack(), power = PowerAmp(), cabinet = Cabinet()
     private var sense = InputSense(), pickup = PickupSim()
+    private var front = PedalBox(), back = PedalBox()
     /// What the input sounds like to the app, for the window to show.
     var hearing: InputKind { sense.heard }
     var acousticness: Float { sense.acousticness }
@@ -369,6 +383,7 @@ final class Chain {
         power.prepare(p, sampleRate: sampleRate)
         cabinet.prepare(p.cab, sampleRate: sampleRate)
         pickup.prepare(p, sampleRate: sampleRate)
+        front.prepare(p.pedal1, sampleRate: sampleRate); back.prepare(p.pedal2, sampleRate: sampleRate)
         if sense.sampleRate != sampleRate { sense.prepare(sampleRate: sampleRate) }
     }
 
@@ -380,6 +395,7 @@ final class Chain {
         room.reset(); limiter = Limiter(); limiter.prepare(sampleRate: sampleRate)
         preamp.reset(); stack.reset(); power.reset(); cabinet.reset()
         pickup.reset(); sense.prepare(sampleRate: sampleRate); sense.reset()
+        front.reset(); back.reset()
         inPeak = 0; outPeak = 0; gateOpen = false; compGr = 0; limiterGr = 0
     }
 
@@ -388,10 +404,12 @@ final class Chain {
         if p.instrument == .guitar { return guitarSample(input) }
         var x = input * inGain.next()
         if p.gateOn { x = gate.process(x) }
+        if p.pedal1.on { x = front.process(x) }
         if p.shapeOn { x = shaper.process(x) }
         if p.compOn { x = comp.process(x) }
         if p.eqOn { x = high.process(presence.process(mid.process(low.process(hpf.process(x))))) }
         if p.driveOn { x = drive.process(x) }
+        if p.pedal2.on { x = back.process(x) }
         var l = x, r = x
         if p.roomOn {
             let (wl, wr) = room.wet(x)
@@ -415,10 +433,12 @@ final class Chain {
         // An acoustic is made to look like a magnetic pickup before the amp ever sees it, so every
         // preset, knob and speaker downstream behaves exactly as it does for an electric.
         if sense.resolve(p.input) == .acoustic { x = pickup.process(x) }
+        if p.pedal1.on { x = front.process(x) }
         x = preamp.process(x)
         x = stack.process(x)
         x = power.process(x)
         x = cabinet.process(x)
+        if p.pedal2.on { x = back.process(x) }
         if p.compOn { x = comp.process(x) }
         var l = x, r = x
         if p.roomOn {
