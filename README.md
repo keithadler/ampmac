@@ -1,5 +1,9 @@
 # Amp for Mac
 
+[![CI](https://github.com/keithadler/ampmac/actions/workflows/ci.yml/badge.svg)](https://github.com/keithadler/ampmac/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/keithadler/ampmac?sort=semver)](https://github.com/keithadler/ampmac/releases/latest)
+[![License](https://img.shields.io/github/license/keithadler/ampmac)](https://github.com/keithadler/ampmac/blob/main/LICENSE)
+
 A guitar amp and a drum amp for the input of your audio interface, and an Ear, powered by [chordmap](https://github.com/keithadler/chordmap), that tells you the key, the tempo, the chords bar by bar and where the capo goes. It listens to one input and plays to one output. Nothing is recorded, nothing leaves the Mac.
 
 ## Download
