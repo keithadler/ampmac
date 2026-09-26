@@ -139,9 +139,12 @@ struct AmpPanel: View {
     @ViewBuilder private var guitarCards: some View {
         Group {
             SectionCard("Guitar", on: nil) {
-                Picker("Plugged in", selection: $model.params.input) {
-                    ForEach(InputKind.allCases) { k in Text(k.title).tag(k) }
-                }.pickerStyle(.segmented)
+                // On macOS 26 and later the segmented control is wider, and in a grid column the
+                // label wrapped to "Plugged / in". Keep it on one line, above the control if need be.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) { Text("Plugged in").fixedSize(); inputPicker }
+                    VStack(alignment: .leading, spacing: 6) { Text("Plugged in"); inputPicker }
+                }
                 if model.params.input == .auto {
                     HStack(spacing: 6) {
                         Image(systemName: model.meter.hearing == .acoustic ? "guitars" : "guitars.fill")
@@ -187,6 +190,12 @@ struct AmpPanel: View {
                 Toggle("Limiter, ceiling half a dB under full", isOn: $model.params.limiterOn).font(.callout)
             }
         }
+    }
+
+    private var inputPicker: some View {
+        Picker("Plugged in", selection: $model.params.input) {
+            ForEach(InputKind.allCases) { k in Text(k.title).tag(k) }
+        }.pickerStyle(.segmented).labelsHidden().fixedSize()
     }
 
     private var pedalsCard: some View {

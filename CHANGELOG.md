@@ -2,12 +2,18 @@
 
 ## 1.2.1, 2026-09-25
 
-Built and tested on macOS 27.
+Built and tested on macOS 27, and drawn in the current macOS look on
+macOS 26 and later.
 
 - The pedal board no longer spills out of its card. Two pedals side by side
   are wider than a grid column, so the board ran over the Room card beside it
   and off the left edge of the window. The pedals now sit side by side when
   there is room and stack when there is not, and a test measures it.
+- "Plugged in" on the Guitar card stays on one line. The macOS 26 and 27
+  segmented control is wider, and in a narrow window the label wrapped to
+  "Plugged" over "in"; it now moves above the switch when there is no room.
+- The Ear's empty history line, "Nothing yet. Every listen lands here.",
+  wraps instead of being cut off in the narrower macOS 27 sidebar.
 
 ## 1.2.0, 2026-09-07
 

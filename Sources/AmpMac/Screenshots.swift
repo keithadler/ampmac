@@ -33,7 +33,7 @@ enum Screenshots {
                 ("acoustic", "Glass", true, MeterState(inDb: -13, outDb: -6, gateOpen: true, hearing: .acoustic)),
             ] {
                 model.select(named: preset); model.running = running; model.meter = meter; model.problem = nil
-                let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+                let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700), styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
                 w.title = "Amp for Mac"
                 w.contentView = NSHostingView(rootView: MainView().environmentObject(model).frame(width: 1000, height: 700))
                 w.center(); w.makeKeyAndOrderFront(nil)
@@ -54,7 +54,7 @@ enum Screenshots {
         model.mode = .ear
         for (suffix, appearance) in [("", NSAppearance.Name.darkAqua), ("-light", .aqua)] {
             app.appearance = NSAppearance(named: appearance)
-            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700), styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
             w.title = "Amp for Mac"
             w.contentView = NSHostingView(rootView: MainView().environmentObject(model).frame(width: 1000, height: 700))
             w.center(); w.makeKeyAndOrderFront(nil)
