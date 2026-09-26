@@ -1,6 +1,7 @@
 //  Amp for Mac — MIT licensed. See LICENSE.
 
 import Foundation
+import SwiftUI
 
 enum PedalsSuite {
     static func run(_ slot: PedalSlot, _ x: [Float], sr: Float = 48000) -> [Float] {
@@ -78,6 +79,17 @@ enum PedalsSuite {
             t.check(lead.pedal1.on && lead.pedal2.on, "a lead sound has its boost and echo on")
             let clean = Presets.named("Glass", user: [])!.params
             t.check(clean.pedal1.on && !clean.pedal2.on, "a clean sound has the compressor on and the chorus ready")
+        },
+        TestCase(name: "the pedal board fits a grid column and stacks rather than spilling over the next card") { t in
+            // A grid column is 360 to 380 points; the card around the board takes 28 of them.
+            let a = PedalSlot.fresh(.screamer), b = PedalSlot.fresh(.echo)
+            func size(_ v: some View, width: CGFloat) -> CGSize { NSHostingController(rootView: v).sizeThatFits(in: CGSize(width: width, height: 5000)) }
+            let sideBySide = HStack(alignment: .top, spacing: 14) { StompBox(number: 1, slot: .constant(a)); StompBox(number: 2, slot: .constant(b)) }
+            t.check(size(sideBySide, width: 332).width > 332, "two pedals side by side do not fit 332 points (else this test proves nothing): \(size(sideBySide, width: 332))")
+            let narrow = size(PedalBoard(pedal1: .constant(a), pedal2: .constant(b)), width: 332)
+            t.check(narrow.width <= 332, "the board fits a 332 point column, got \(narrow)")
+            let wide = size(PedalBoard(pedal1: .constant(a), pedal2: .constant(b)), width: 900)
+            t.check(wide.height < narrow.height, "with room, the pedals sit side by side: \(wide) against \(narrow)")
         },
     ]) }
 }

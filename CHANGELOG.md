@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.1, 2026-09-25
+
+Built and tested on macOS 27.
+
+- The pedal board no longer spills out of its card. Two pedals side by side
+  are wider than a grid column, so the board ran over the Room card beside it
+  and off the left edge of the window. The pedals now sit side by side when
+  there is room and stack when there is not, and a test measures it.
+
 ## 1.2.0, 2026-09-07
 
 - Pedals: a two-slot board under the amp, pedal 1 in front and pedal 2

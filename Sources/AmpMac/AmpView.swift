@@ -191,10 +191,7 @@ struct AmpPanel: View {
 
     private var pedalsCard: some View {
         SectionCard("Pedals", on: nil) {
-            HStack(alignment: .top, spacing: 14) {
-                StompBox(number: 1, slot: $model.params.pedal1)
-                StompBox(number: 2, slot: $model.params.pedal2)
-            }
+            PedalBoard(pedal1: $model.params.pedal1, pedal2: $model.params.pedal2)
             Text("Pedal 1 is in front of the amp, pedal 2 after it. ⌘⌥1 and ⌘⌥2 stomp them without looking.")
                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
@@ -330,6 +327,27 @@ struct Knob: View {
     }
 }
 
+
+/// The two pedals. Side by side they need about 430 points, and a grid column is about 370: an
+/// HStack that does not fit spills out of its card over the card beside it. So they sit side by
+/// side when there is room and stack when there is not.
+struct PedalBoard: View {
+    @Binding var pedal1: PedalSlot
+    @Binding var pedal2: PedalSlot
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: 14) {
+                StompBox(number: 1, slot: $pedal1)
+                StompBox(number: 2, slot: $pedal2)
+            }
+            VStack(alignment: .leading, spacing: 14) {
+                StompBox(number: 1, slot: $pedal1)
+                Divider()
+                StompBox(number: 2, slot: $pedal2)
+            }
+        }
+    }
+}
 
 /// One pedal on the board: a stomp switch with its light, the kind, and three knobs.
 struct StompBox: View {
